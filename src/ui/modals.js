@@ -82,10 +82,12 @@ export function setTipTab(tab) {
 
   const tips = {
     live: `
-      <p class="font-bold text-emerald-400 mb-1">Panoptix LiveScope™:</p>
-      <p>• Zero scroll delay. You are watching live video of the water column ahead.</p>
-      <p>• Live fish appear as swimming blips with glowing halos.</p>
-      <p>• Drop a jig and watch bass track and strike it in real time.</p>
+      <p class="font-bold text-emerald-400 mb-1">Panoptix LiveScope™ Three Directional Modes & Rotation:</p>
+      <p>• <strong>Forward Mode:</strong> Shows what is happening in front of and around your boat. Ideal for casting to structure and fish ahead.</p>
+      <p>• <strong>Down Mode:</strong> Shows live views directly beneath your boat for vertical jigging and pinpointing depth.</p>
+      <p>• <strong>Perspective Mode:</strong> Wide-angle top-down horizontal view (135° fan) ideal for shallow water, weedlines, and shorelines.</p>
+      <p>• <strong>Beam Rotation:</strong> Rotate the transducer heading (-180° to +180°) relative to boat travel to "look around" for schooling fish without turning the boat.</p>
+      <p>• <strong>Zero Scroll Delay:</strong> Real-time 20 FPS video representation. Live fish appear as swimming blips with glowing acoustic halos.</p>
     `,
     side: `
       <p class="font-bold text-purple-400 mb-1">SideVü™ UHD:</p>

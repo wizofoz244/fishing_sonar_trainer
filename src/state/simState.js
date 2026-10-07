@@ -44,6 +44,8 @@ class SimStateManager {
       sideSliceThickDeg: 1.2,
       liveTiltDeg: 45,
       liveSpreadDeg: 40,
+      liveMode: 'forward',
+      liveRotationDeg: 0,
       clearAngleDeg: 45
     };
 

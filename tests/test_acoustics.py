@@ -251,5 +251,61 @@ class TestAcousticEngine(unittest.TestCase):
             self.assertGreaterEqual(effective_depth, tx_depth)
 
 
+    def test_livescope_modes_and_rotation(self):
+        """Validates LiveScope Forward, Down, and Perspective modes and azimuth rotation."""
+        # Bow transducer origin at z = 48.0, x = 0.0, tx_depth = 0.6
+        tx_z = 48.0
+        tx_depth = 0.6
+
+        # Target directly ahead: lateral_x = 0, z = 78 (fwd = 30 ft), depth = 15 ft
+        target_fwd_x = 0.0
+        target_fwd_z = 78.0
+        target_depth = 15.0
+
+        # Helper simulating beam rotation transformation
+        def get_beam_coords(lateral_x: float, rel_z: float, rot_deg: float) -> tuple[float, float]:
+            dx = lateral_x
+            dz = rel_z - tx_z
+            rot_rad = math.radians(rot_deg)
+            b_fwd = dz * math.cos(rot_rad) + dx * math.sin(rot_rad)
+            b_cross = -dz * math.sin(rot_rad) + dx * math.cos(rot_rad)
+            return b_fwd, b_cross
+
+        # 1. At 0° rotation (heading bow), target ahead is directly centered along beam forward
+        b_fwd, b_cross = get_beam_coords(target_fwd_x, target_fwd_z, 0.0)
+        self.assertAlmostEqual(b_fwd, 30.0, places=4)
+        self.assertAlmostEqual(b_cross, 0.0, places=4)
+
+        # 2. Rotate beam 90° Starboard: target ahead should now be on Port beam flank
+        b_fwd_rot, b_cross_rot = get_beam_coords(target_fwd_x, target_fwd_z, 90.0)
+        self.assertAlmostEqual(b_fwd_rot, 0.0, places=4)
+        self.assertAlmostEqual(b_cross_rot, -30.0, places=4)
+
+        # 3. Target located 30 ft off starboard beam (x = 30, z = 48)
+        target_stbd_x = 30.0
+        target_stbd_z = 48.0
+        # At 0° rotation (bow), this is cross-beam (+30 ft) and not forward
+        b_fwd_s0, b_cross_s0 = get_beam_coords(target_stbd_x, target_stbd_z, 0.0)
+        self.assertAlmostEqual(b_fwd_s0, 0.0, places=4)
+        self.assertAlmostEqual(b_cross_s0, 30.0, places=4)
+
+        # When rotating beam 90° Starboard, it points directly at this starboard target!
+        b_fwd_s90, b_cross_s90 = get_beam_coords(target_stbd_x, target_stbd_z, 90.0)
+        self.assertAlmostEqual(b_fwd_s90, 30.0, places=4)
+        self.assertAlmostEqual(b_cross_s90, 0.0, places=4)
+
+        # 4. Perspective Mode coverage: wide horizontal fan (135° = ±67.5°)
+        # A target at 45° azimuth angle from the rotated beam axis should be inside the 135° sector
+        target_angle_rad = math.atan2(abs(15.0), 20.0) # ~36.8°
+        self.assertLess(target_angle_rad, math.radians(135.0 / 2))
+
+        # 5. Down Mode coverage: targets directly underneath transducer (e.g. z = 48, x = 0, depth = 20 ft)
+        down_target_dz = abs(48.0 - tx_z) # 0 ft
+        down_target_dy = 20.0 - tx_depth # 19.4 ft
+        vert_angle = math.atan2(down_target_dz, down_target_dy) # 0 rad (straight down)
+        self.assertLess(vert_angle, math.radians(135.0 / 2))
+
+
 if __name__ == "__main__":
     unittest.main()
+

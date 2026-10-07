@@ -65,12 +65,26 @@ export function render2DWaterPhysics(canvas, ctx) {
 
   if (state.showIllustrations) {
     if (state.power['live']) {
-      const tiltRad = (state.liveTiltDeg * Math.PI) / 180;
-      const spreadRad = (state.liveSpreadDeg * Math.PI) / 180;
+      const mode = state.liveMode || 'forward';
+      const rotDeg = state.liveRotationDeg || 0;
+      const rotRad = (rotDeg * Math.PI) / 180;
+      const cosRot = Math.cos(rotRad);
+
+      let tiltRad, spreadRad;
+      if (mode === 'perspective') {
+        tiltRad = (15 * Math.PI) / 180;
+        spreadRad = (20 * Math.PI) / 180;
+      } else if (mode === 'down') {
+        tiltRad = (90 * Math.PI) / 180;
+        spreadRad = (135 * Math.PI) / 180;
+      } else {
+        tiltRad = (state.liveTiltDeg * Math.PI) / 180;
+        spreadRad = (state.liveSpreadDeg * Math.PI) / 180;
+      }
+
       const liveReachFt = 55;
-      // Clamp minimum angle so beam never projects upwards above the horizontal into the air
       const minAngle = Math.max(0.04, tiltRad - spreadRad / 2);
-      const maxAngle = Math.min(Math.PI / 2 - 0.05, Math.max(minAngle + 0.05, tiltRad + spreadRad / 2));
+      const maxAngle = Math.min(Math.PI / 2, Math.max(minAngle + 0.05, tiltRad + spreadRad / 2));
       const numArcSteps = 24;
 
       ctx.fillStyle = 'rgba(16, 185, 129, 0.22)';
@@ -79,9 +93,9 @@ export function render2DWaterPhysics(canvas, ctx) {
 
       for (let i = 0; i <= numArcSteps; i++) {
         const a = minAngle + (i / numArcSteps) * (maxAngle - minAngle);
-        const ray = getLiveRayReach(a, liveReachFt, bowZ, 0);
-        const px = screenBowX + ray.fwd * scaleX;
-        // Strict waterline clamping: ray depth cannot be less than 0 (water surface = airHeight)
+        const ray = getLiveRayReach(a, liveReachFt, bowZ, 0, rotRad);
+        // In 2D side cutaway view, project forward reach along boat axis (ray.fwd * cosRot)
+        const px = screenBowX + ray.fwd * cosRot * scaleX;
         const effectiveDepth = Math.max(0, ray.depth);
         const py = Math.max(airHeight, airHeight + (effectiveDepth / maxDisplayDepth) * usableHeight);
         ctx.lineTo(px, py);

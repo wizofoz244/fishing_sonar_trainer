@@ -455,16 +455,32 @@ function renderAcousticBeams3D(ctx, ox, oy, s, depth, lakeWidthHalf = 65) {
     ctx.stroke();
   }
 
-  // 4. LiveScope Phased Array (20° Azimuth × Elevation Wedge with Lakebed Footprint)
+  // 4. LiveScope Phased Array (Forward / Down / Perspective with Azimuth Rotation)
   if (state.power['live']) {
     const txLive = project3D(0, txDepth, bowZ, ox, oy, s);
     const liveReach = 55;
-    const tiltRad = (state.liveTiltDeg * Math.PI) / 180;
-    const spreadRad = (state.liveSpreadDeg * Math.PI) / 180;
-    const halfAzimuthRad = (20 / 2) * Math.PI / 180;
+    const mode = state.liveMode || 'forward';
+    const rotDeg = state.liveRotationDeg || 0;
+    const rotRad = (rotDeg * Math.PI) / 180;
 
-    const minAngle = Math.max(0.12, tiltRad - spreadRad / 2);
-    const maxAngle = Math.min(Math.PI / 2 - 0.05, tiltRad + spreadRad / 2);
+    let tiltRad, spreadRad, azimuthSpreadRad;
+    if (mode === 'perspective') {
+      tiltRad = (15 * Math.PI) / 180; // Shallow downward tilt
+      spreadRad = (20 * Math.PI) / 180; // Thin vertical elevation slice
+      azimuthSpreadRad = (135 * Math.PI) / 180; // Wide horizontal fan
+    } else if (mode === 'down') {
+      tiltRad = (90 * Math.PI) / 180; // Directly down
+      spreadRad = (135 * Math.PI) / 180; // Fore-aft span
+      azimuthSpreadRad = (20 * Math.PI) / 180; // Cross-beam slice
+    } else {
+      tiltRad = (state.liveTiltDeg * Math.PI) / 180;
+      spreadRad = (state.liveSpreadDeg * Math.PI) / 180;
+      azimuthSpreadRad = (20 * Math.PI) / 180;
+    }
+
+    const halfAzimuthRad = azimuthSpreadRad / 2;
+    const minAngle = Math.max(0.08, tiltRad - spreadRad / 2);
+    const maxAngle = Math.min(Math.PI / 2, tiltRad + spreadRad / 2);
     const numArcSteps = 24;
 
     const portRays = [];
@@ -474,17 +490,26 @@ function renderAcousticBeams3D(ctx, ox, oy, s, depth, lakeWidthHalf = 65) {
 
     for (let i = 0; i <= numArcSteps; i++) {
       const angle = minAngle + (i / numArcSteps) * (maxAngle - minAngle);
-      // Raycast center to determine reach
-      const ray = getLiveRayReach(angle, liveReach, bowZ, 0);
-      const lateralWidth = Math.sin(halfAzimuthRad) * ray.r;
+      // Raycast center reach
+      const ray = getLiveRayReach(angle, liveReach, bowZ, 0, rotRad);
+      const lateralHalf = Math.sin(halfAzimuthRad) * ray.r;
 
-      // Calculate 3D points for port and starboard boundaries with strict surface clamping (depth >= 0)
+      // Transform rotated beam coordinates to lake frame:
+      // In beam frame: forward = ray.fwd, lateral = ±lateralHalf
+      // Lake frame: X = lateral * cos(rot) + fwd * sin(rot)
+      //             Z = -lateral * sin(rot) + fwd * cos(rot)
       const clampedDepth = Math.max(0, ray.depth);
-      const pPort = project3D(-lateralWidth, clampedDepth, bowZ + ray.fwd, ox, oy, s);
-      const pStbd = project3D(lateralWidth, clampedDepth, bowZ + ray.fwd, ox, oy, s);
 
-      portRays.push({ p: pPort, ray, lateral: -lateralWidth });
-      stbdRays.push({ p: pStbd, ray, lateral: lateralWidth });
+      const portX = -lateralHalf * Math.cos(rotRad) + ray.fwd * Math.sin(rotRad);
+      const portZ = bowZ - (-lateralHalf * Math.sin(rotRad)) + ray.fwd * Math.cos(rotRad);
+      const pPort = project3D(portX, clampedDepth, portZ, ox, oy, s);
+
+      const stbdX = lateralHalf * Math.cos(rotRad) + ray.fwd * Math.sin(rotRad);
+      const stbdZ = bowZ - (lateralHalf * Math.sin(rotRad)) + ray.fwd * Math.cos(rotRad);
+      const pStbd = project3D(stbdX, clampedDepth, stbdZ, ox, oy, s);
+
+      portRays.push({ p: pPort, ray, lateral: -lateralHalf });
+      stbdRays.push({ p: pStbd, ray, lateral: lateralHalf });
 
       if (ray.hitBottom) {
         bottomPtsPort.push(pPort);

@@ -29,114 +29,233 @@ export function renderLiveScopeMFD(canvas, ctx) {
   const originX = 14;
   const originY = 14;
   const maxRangeFt = 60;
-  const scaleX = (w - 24) / maxRangeFt;
   const maxDisplayDepth = 45;
-  const scaleY = (h - 24) / maxDisplayDepth;
   const bowZ = (state.boatZ || 35) + state.txOffsetBow;
+  const mode = state.liveMode || 'forward';
+  const rotationDeg = state.liveRotationDeg || 0;
+  const rotRad = (rotationDeg * Math.PI) / 180;
 
-  ctx.strokeStyle = 'rgba(16, 185, 129, 0.25)';
-  ctx.lineWidth = 1;
-  [20, 40, 60].forEach(r => {
+  // Helper coordinate mapper depending on mode:
+  // Forward: (forward, depth) from origin top-left
+  // Down: (forwardSpan -30..+30, depth 0..45) with origin at top-center (w/2, 14)
+  // Perspective: (crossSpan -45..+45, forward 0..60) with origin at bottom-center (w/2, h - 14)
+  let getScreenCoords;
+
+  if (mode === 'perspective') {
+    // Top-down / horizontal radar view looking forward from boat
+    const pOriginX = w / 2;
+    const pOriginY = h - 16;
+    const pMaxDist = 60;
+    const pScale = (h - 28) / pMaxDist;
+
+    // Draw range arc sectors (135° fan: -67.5° to +67.5°)
+    const startAngle = -Math.PI / 2 - (135 / 2) * Math.PI / 180;
+    const endAngle = -Math.PI / 2 + (135 / 2) * Math.PI / 180;
+
+    ctx.strokeStyle = 'rgba(16, 185, 129, 0.25)';
+    ctx.lineWidth = 1;
+    [20, 40, 60].forEach(r => {
+      ctx.beginPath();
+      ctx.arc(pOriginX, pOriginY, r * pScale, startAngle, endAngle);
+      ctx.stroke();
+
+      ctx.fillStyle = '#64748b';
+      ctx.font = '7.5px monospace';
+      ctx.fillText(`${r}FT`, pOriginX - 10, pOriginY - r * pScale + 8);
+    });
+
+    // Azimuth radial lines
+    [-67.5, -45, -22.5, 0, 22.5, 45, 67.5].forEach(deg => {
+      const rad = -Math.PI / 2 + (deg * Math.PI) / 180;
+      ctx.beginPath();
+      ctx.moveTo(pOriginX, pOriginY);
+      ctx.lineTo(pOriginX + Math.cos(rad) * 60 * pScale, pOriginY + Math.sin(rad) * 60 * pScale);
+      ctx.stroke();
+    });
+
+    // Outer boundary fan border
+    ctx.strokeStyle = '#059669';
+    ctx.lineWidth = 1.8;
     ctx.beginPath();
-    ctx.arc(originX, originY, r * scaleX, 0, Math.PI / 2);
+    ctx.moveTo(pOriginX, pOriginY);
+    ctx.arc(pOriginX, pOriginY, 60 * pScale, startAngle, endAngle);
+    ctx.closePath();
     ctx.stroke();
-  });
 
-  ctx.beginPath();
-  for (let fwd = 0; fwd <= maxRangeFt; fwd += 2) {
-    const bD = getDepthAt(0, bowZ + fwd);
-    const px = originX + fwd * scaleX;
-    const py = originY + bD * scaleY;
-    if (fwd === 0) ctx.moveTo(px, py);
-    else ctx.lineTo(px, py);
+    getScreenCoords = (hit) => {
+      // hit.beamX (lateral cross), hit.beamZ (forward)
+      return {
+        x: pOriginX + hit.beamX * pScale,
+        y: pOriginY - hit.beamZ * pScale
+      };
+    };
+  } else if (mode === 'down') {
+    // Down mode: origin at top-center, showing water column directly beneath transducer (-30ft to +30ft span, 0 to 45ft depth)
+    const dOriginX = w / 2;
+    const dOriginY = 14;
+    const spanFt = 60; // -30 to +30 ft
+    const scaleSpan = (w - 28) / spanFt;
+    const scaleDepth = (h - 24) / maxDisplayDepth;
+
+    // Depth arcs / range rings
+    ctx.strokeStyle = 'rgba(16, 185, 129, 0.25)';
+    ctx.lineWidth = 1;
+    [15, 30, 45].forEach(r => {
+      ctx.beginPath();
+      ctx.arc(dOriginX, dOriginY, r * scaleDepth, 0, Math.PI);
+      ctx.stroke();
+
+      ctx.fillStyle = '#64748b';
+      ctx.font = '7.5px monospace';
+      ctx.fillText(`${r}FT`, dOriginX + 4, dOriginY + r * scaleDepth - 2);
+    });
+
+    // Downward beam cone borders (135° downward fan = -67.5° to +67.5° from nadir)
+    ctx.strokeStyle = '#059669';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(dOriginX, dOriginY);
+    ctx.lineTo(dOriginX - 30 * scaleSpan, dOriginY + 45 * scaleDepth);
+    ctx.moveTo(dOriginX, dOriginY);
+    ctx.lineTo(dOriginX + 30 * scaleSpan, dOriginY + 45 * scaleDepth);
+    ctx.stroke();
+
+    // Lakebed bottom contour beneath boat
+    ctx.beginPath();
+    for (let span = -30; span <= 30; span += 2) {
+      const zOffset = span * Math.cos(rotRad);
+      const xOffset = span * Math.sin(rotRad);
+      const bD = getDepthAt(xOffset, bowZ + zOffset);
+      const px = dOriginX + span * scaleSpan;
+      const py = dOriginY + bD * scaleDepth;
+      if (span === -30) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.strokeStyle = '#059669';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    getScreenCoords = (hit) => {
+      return {
+        x: dOriginX + hit.fwdDist * scaleSpan,
+        y: dOriginY + hit.depth * scaleDepth
+      };
+    };
+  } else {
+    // Forward mode (Default): origin at top-left
+    const scaleX = (w - 24) / maxRangeFt;
+    const scaleY = (h - 24) / maxDisplayDepth;
+
+    ctx.strokeStyle = 'rgba(16, 185, 129, 0.25)';
+    ctx.lineWidth = 1;
+    [20, 40, 60].forEach(r => {
+      ctx.beginPath();
+      ctx.arc(originX, originY, r * scaleX, 0, Math.PI / 2);
+      ctx.stroke();
+
+      ctx.fillStyle = '#64748b';
+      ctx.font = '7.5px monospace';
+      ctx.fillText(`${r}FT`, originX + r * scaleX - 16, originY + 10);
+    });
+
+    ctx.beginPath();
+    for (let fwd = 0; fwd <= maxRangeFt; fwd += 2) {
+      const zOffset = fwd * Math.cos(rotRad);
+      const xOffset = fwd * Math.sin(rotRad);
+      const bD = getDepthAt(xOffset, bowZ + zOffset);
+      const px = originX + fwd * scaleX;
+      const py = originY + bD * scaleY;
+      if (fwd === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.strokeStyle = '#059669';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    getScreenCoords = (hit) => {
+      return {
+        x: originX + hit.fwdDist * scaleX,
+        y: originY + hit.depth * scaleY
+      };
+    };
   }
-  ctx.strokeStyle = '#059669';
-  ctx.lineWidth = 2.5;
-  ctx.stroke();
+
+  // Draw on-screen LiveScope Mode & Rotation Telemetry
+  ctx.save();
+  ctx.font = 'bold 8.5px monospace';
+  const modeLabel = `${mode.toUpperCase()} MODE • ROT: ${rotationDeg >= 0 ? '+' : ''}${rotationDeg}°`;
+  ctx.fillStyle = 'rgba(6, 78, 59, 0.9)';
+  ctx.fillRect(w - 150, 4, 146, 14);
+  ctx.strokeStyle = '#34d399';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(w - 150, 4, 146, 14);
+  ctx.fillStyle = '#6ee7b7';
+  ctx.fillText(modeLabel, w - 146, 14);
+  ctx.restore();
 
   structures.forEach(st => {
     const relZ = ((st.z - state.worldZ) % state.lakeLength + state.lakeLength) % state.lakeLength;
-    const fwdDist = relZ - bowZ;
-    if (fwdDist >= 0 && fwdDist <= maxRangeFt && Math.abs(st.x) <= 22) {
-      const bD = getDepthAt(st.x, relZ);
-      const topD = Math.max(0.5, bD - (st.height || (st.type === 'tree' ? 11 : 5.5)));
-      // Check if top or bottom of structure intersects the LiveScope beam window
-      const inBeamTop = isTargetInLiveScope(relZ, st.x, topD);
-      const inBeamBase = isTargetInLiveScope(relZ, st.x, bD);
-      if (!inBeamTop && !inBeamBase) return;
+    const bD = getDepthAt(st.x, relZ);
+    const topD = Math.max(0.5, bD - (st.height || (st.type === 'tree' ? 11 : 5.5)));
+    const hitTop = isTargetInLiveScope(relZ, st.x, topD);
+    const hitBase = isTargetInLiveScope(relZ, st.x, bD);
+    const hit = hitTop || hitBase;
+    if (!hit) return;
 
-      const px = originX + fwdDist * scaleX;
-      const pyBed = originY + bD * scaleY;
-      const isSelected = (state.selectedTargetId === st.id);
+    const coords = getScreenCoords(hit);
+    const px = coords.x;
+    const py = coords.y;
+    const isSelected = (state.selectedTargetId === st.id);
 
-      if (st.type === 'boulder') {
-        const rockH = (st.height || 5.5) * scaleY;
-        const rockW = (st.width || 8.5) * 0.5 * scaleX;
-        const pyTop = pyBed - rockH;
+    if (st.type === 'boulder') {
+      const rockR = 8;
+      ctx.beginPath();
+      ctx.arc(px, py, rockR, 0, Math.PI * 2);
+      ctx.fillStyle = isSelected ? '#713f12' : '#064e3b';
+      ctx.fill();
+      ctx.strokeStyle = isSelected ? '#facc15' : '#34d399';
+      ctx.lineWidth = isSelected ? 2.5 : 1.5;
+      ctx.stroke();
 
-        const shadowSpan = rockW * 1.6;
-        ctx.fillStyle = '#02050c';
-        ctx.fillRect(px + rockW * 0.8, pyBed - 2, shadowSpan, 5);
+      hitBoxesLiveScope.push({
+        id: st.id,
+        x: px - rockR - 4,
+        y: py - rockR - 4,
+        w: rockR * 2 + 8,
+        h: rockR * 2 + 8
+      });
 
-        ctx.beginPath();
-        ctx.ellipse(px, pyBed - rockH * 0.45, rockW, rockH * 0.7, 0, Math.PI, 0, false);
-        ctx.lineTo(px + rockW, pyBed);
-        ctx.lineTo(px - rockW, pyBed);
-        ctx.closePath();
+      if (state.showCorrelationOverlay || isSelected) {
+        drawLiveScopeBadge(canvas, ctx, px, py - 12, st.tag || 'E1', isSelected ? '★ BOULDER' : 'BOULDER DOME', isSelected ? '#facc15' : '#34d399', isSelected);
+      }
+    } else if (st.type === 'tree') {
+      const treeH = mode === 'perspective' ? 14 : 28;
+      ctx.strokeStyle = isSelected ? '#facc15' : '#10b981';
+      ctx.lineWidth = isSelected ? 3.5 : 2.5;
+      ctx.beginPath();
+      ctx.moveTo(px, py);
+      ctx.lineTo(px, py - treeH);
+      ctx.stroke();
 
-        ctx.fillStyle = isSelected ? '#713f12' : '#064e3b';
-        ctx.fill();
+      ctx.strokeStyle = isSelected ? '#fef08a' : '#34d399';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(px, py - treeH * 0.4);
+      ctx.lineTo(px + 7, py - treeH * 0.55);
+      ctx.moveTo(px, py - treeH * 0.65);
+      ctx.lineTo(px - 6, py - treeH * 0.8);
+      ctx.stroke();
 
-        ctx.strokeStyle = isSelected ? '#facc15' : '#34d399';
-        ctx.lineWidth = isSelected ? 2.5 : 1.8;
-        ctx.beginPath();
-        ctx.arc(px, pyBed - rockH * 0.45, rockW * 0.95, Math.PI * 0.85, Math.PI * 1.8);
-        ctx.stroke();
+      hitBoxesLiveScope.push({
+        id: st.id,
+        x: px - 12,
+        y: py - treeH - 4,
+        w: 24,
+        h: treeH + 8
+      });
 
-        hitBoxesLiveScope.push({
-          id: st.id,
-          x: px - rockW - 4,
-          y: pyTop - 8,
-          w: rockW * 2 + 8,
-          h: rockH + 12
-        });
-
-        if (state.showCorrelationOverlay || isSelected) {
-          drawLiveScopeBadge(canvas, ctx, px, pyTop - 12, st.tag || 'E1', isSelected ? '★ BOULDER' : 'BOULDER DOME', isSelected ? '#facc15' : '#34d399', isSelected);
-        }
-      } else if (st.type === 'tree') {
-        const treeH = (st.height || 11) * scaleY;
-        const pyTop = pyBed - treeH;
-
-        ctx.strokeStyle = isSelected ? '#facc15' : '#10b981';
-        ctx.lineWidth = isSelected ? 3.5 : 2.5;
-        ctx.beginPath();
-        ctx.moveTo(px, pyBed);
-        ctx.lineTo(px - 2, pyTop);
-        ctx.stroke();
-
-        ctx.strokeStyle = isSelected ? '#fef08a' : '#34d399';
-        ctx.lineWidth = isSelected ? 2.2 : 1.5;
-        ctx.beginPath();
-        ctx.moveTo(px - 1, pyBed - treeH * 0.38);
-        ctx.lineTo(px + 7 * scaleX, pyBed - treeH * 0.52);
-        ctx.moveTo(px - 1, pyBed - treeH * 0.62);
-        ctx.lineTo(px - 6 * scaleX, pyBed - treeH * 0.78);
-        ctx.moveTo(px - 2, pyTop);
-        ctx.lineTo(px + 4 * scaleX, pyTop - 3);
-        ctx.stroke();
-
-        hitBoxesLiveScope.push({
-          id: st.id,
-          x: px - 12,
-          y: pyTop - 8,
-          w: 32,
-          h: treeH + 12
-        });
-
-        if (state.showCorrelationOverlay || isSelected) {
-          drawLiveScopeBadge(canvas, ctx, px, pyTop - 12, st.tag || 'D1', isSelected ? '★ TIMBER' : 'STANDING TIMBER', isSelected ? '#facc15' : '#34d399', isSelected);
-        }
+      if (state.showCorrelationOverlay || isSelected) {
+        drawLiveScopeBadge(canvas, ctx, px, py - treeH - 6, st.tag || 'D1', isSelected ? '★ TIMBER' : 'STANDING TIMBER', isSelected ? '#facc15' : '#34d399', isSelected);
       }
     }
   });
@@ -147,8 +266,9 @@ export function renderLiveScopeMFD(canvas, ctx) {
     const actualDepth = Math.min(localD - 1.5, f.y);
     const hit = isTargetInLiveScope(relZ, f.x, actualDepth);
     if (hit) {
-      const fx = originX + hit.fwdDist * scaleX;
-      const fy = originY + hit.depth * scaleY;
+      const coords = getScreenCoords(hit);
+      const fx = coords.x;
+      const fy = coords.y;
       const isSelected = (state.selectedTargetId === f.id);
 
       const fishLen = Math.max(7, 9 * f.size);
@@ -213,17 +333,20 @@ export function renderLiveScopeMFD(canvas, ctx) {
     const lureRelZ = lure.z !== undefined ? lure.z : bowZ + 6;
     const hit = isTargetInLiveScope(lureRelZ, lure.x || 0, lure.depth);
     if (hit) {
-      const lx = originX + hit.fwdDist * scaleX;
-      const ly = originY + hit.depth * scaleY;
+      const coords = getScreenCoords(hit);
+      const lx = coords.x;
+      const ly = coords.y;
 
-      ctx.strokeStyle = 'rgba(251, 191, 36, 0.45)';
-      ctx.lineWidth = 1.2;
-      ctx.setLineDash([2, 2]);
-      ctx.beginPath();
-      ctx.moveTo(lx, originY + (hit.depth - 4) * scaleY);
-      ctx.lineTo(lx, ly);
-      ctx.stroke();
-      ctx.setLineDash([]);
+      if (mode !== 'perspective') {
+        ctx.strokeStyle = 'rgba(251, 191, 36, 0.45)';
+        ctx.lineWidth = 1.2;
+        ctx.setLineDash([2, 2]);
+        ctx.beginPath();
+        ctx.moveTo(lx, Math.max(14, ly - 20));
+        ctx.lineTo(lx, ly);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
 
       ctx.fillStyle = '#ffffff';
       ctx.beginPath();

@@ -53,6 +53,87 @@ function initAngleControls() {
     });
   }
 
+  // LiveScope Directional Modes
+  ['fwd', 'down', 'persp'].forEach(mKey => {
+    const modeName = mKey === 'fwd' ? 'forward' : (mKey === 'down' ? 'down' : 'perspective');
+    const headerBtn = document.getElementById(`btn-live-mode-${mKey}`);
+    const drawerBtn = document.getElementById(`drawer-live-mode-${mKey}`);
+
+    const setMode = () => {
+      simState.update({ liveMode: modeName });
+    };
+
+    if (headerBtn) headerBtn.addEventListener('click', setMode);
+    if (drawerBtn) drawerBtn.addEventListener('click', setMode);
+  });
+
+  // LiveScope Beam Azimuth Rotation
+  const liveRotInput = document.getElementById('input-live-rot');
+  const liveRotVal = document.getElementById('val-live-rot-num');
+  if (liveRotInput) {
+    liveRotInput.addEventListener('input', (e) => {
+      const v = parseInt(e.target.value, 10);
+      simState.update({ liveRotationDeg: v });
+    });
+  }
+
+  // Preset rotation buttons
+  const rotPresets = [
+    { id: 'btn-rot-port90', val: -90 },
+    { id: 'btn-rot-port45', val: -45 },
+    { id: 'btn-rot-zero',   val: 0 },
+    { id: 'btn-rot-stbd45', val: 45 },
+    { id: 'btn-rot-stbd90', val: 90 }
+  ];
+  rotPresets.forEach(({ id, val }) => {
+    const btn = document.getElementById(id);
+    if (btn) {
+      btn.addEventListener('click', () => {
+        simState.update({ liveRotationDeg: val });
+      });
+    }
+  });
+
+  // Subscribe to simState to update UI buttons and labels
+  simState.subscribe((updates, state) => {
+    if ('liveMode' in updates) {
+      const mode = state.liveMode;
+      const badge = document.getElementById('val-live-mode-badge');
+      if (badge) badge.innerText = mode.toUpperCase();
+
+      ['fwd', 'down', 'persp'].forEach(mKey => {
+        const mName = mKey === 'fwd' ? 'forward' : (mKey === 'down' ? 'down' : 'perspective');
+        const isCur = (mode === mName);
+        const hBtn = document.getElementById(`btn-live-mode-${mKey}`);
+        const dBtn = document.getElementById(`drawer-live-mode-${mKey}`);
+        if (hBtn) {
+          hBtn.className = isCur 
+            ? "px-1.5 py-0.2 rounded bg-emerald-600 text-white font-bold text-[7.5px]"
+            : "px-1.5 py-0.2 rounded text-slate-400 hover:text-white font-bold text-[7.5px]";
+        }
+        if (dBtn) {
+          dBtn.className = isCur
+            ? "py-1 rounded bg-emerald-600 text-white font-bold text-[9px] border border-emerald-500"
+            : "py-1 rounded bg-slate-800 text-slate-300 hover:text-white font-bold text-[9px] border border-slate-700";
+        }
+      });
+    }
+
+    if ('liveRotationDeg' in updates) {
+      const deg = state.liveRotationDeg;
+      if (liveRotInput && parseInt(liveRotInput.value, 10) !== deg) {
+        liveRotInput.value = deg;
+      }
+      if (liveRotVal) {
+        let label = `${deg}°`;
+        if (deg === 0) label += ' (Bow Ahead)';
+        else if (deg > 0) label += ' (Stbd)';
+        else label += ' (Port)';
+        liveRotVal.innerText = label;
+      }
+    }
+  });
+
   const liveTiltInput = document.getElementById('input-live-tilt');
   const liveTiltVal = document.getElementById('val-live-tilt-num');
   if (liveTiltInput) {

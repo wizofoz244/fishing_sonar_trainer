@@ -166,6 +166,12 @@
                 <span class="font-bold text-emerald-400 uppercase tracking-wide">PANOPTIX LIVESCOPE™</span>
               </div>
               <div class="flex items-center gap-1">
+                <!-- Mode Switchers -->
+                <div class="flex items-center bg-slate-900 border border-slate-800 rounded p-0.5 gap-0.5">
+                  <button id="btn-live-mode-fwd" class="px-1.5 py-0.2 rounded bg-emerald-600 text-white font-bold text-[7.5px]" title="Forward Mode: Ahead & around boat">FWD</button>
+                  <button id="btn-live-mode-down" class="px-1.5 py-0.2 rounded text-slate-400 hover:text-white font-bold text-[7.5px]" title="Down Mode: Directly beneath boat">DOWN</button>
+                  <button id="btn-live-mode-persp" class="px-1.5 py-0.2 rounded text-slate-400 hover:text-white font-bold text-[7.5px]" title="Perspective Mode: Top-down wide shallow view">PERSP</button>
+                </div>
                 <button id="btn-tip-live" class="px-1 py-0.2 rounded bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold text-[8px]" title="How to Read LiveScope">? TIPS</button>
                 <button id="mfd-btn-live" class="px-1.5 py-0.2 rounded bg-emerald-700 text-white font-bold text-[8px]">PWR: ON</button>
                 <button id="btn-max-live" class="text-slate-400 hover:text-white px-0.5" title="Maximize">⛶</button>
@@ -330,17 +336,45 @@
       <input id="input-side-thick" type="range" min="0.5" max="3.0" step="0.1" value="1.2" class="w-full accent-purple-400 bg-slate-800 rounded h-1 cursor-pointer">
     </div>
 
-    <div class="bg-slate-950 p-2 rounded-xl border border-emerald-900/50 space-y-1.5">
-      <div class="flex justify-between text-[11px]">
-        <span class="text-emerald-300 font-semibold">LiveScope Tilt Angle</span>
-        <span id="val-live-tilt-num" class="text-white font-bold">45°</span>
+    <div class="bg-slate-950 p-2 rounded-xl border border-emerald-900/50 space-y-2">
+      <div class="flex items-center justify-between text-[11px]">
+        <span class="text-emerald-300 font-semibold">LiveScope Directional Mode</span>
+        <span id="val-live-mode-badge" class="text-emerald-400 font-bold uppercase text-[9px] px-1 bg-emerald-950 rounded border border-emerald-800">FORWARD</span>
       </div>
-      <input id="input-live-tilt" type="range" min="20" max="90" step="5" value="45" class="w-full accent-emerald-400 bg-slate-800 rounded h-1 cursor-pointer">
-      <div class="flex justify-between text-[10px]">
-        <span class="text-slate-400">Beam Spread Width</span>
-        <span id="val-live-spread-num" class="text-white font-bold">40°</span>
+      <div class="grid grid-cols-3 gap-1">
+        <button id="drawer-live-mode-fwd" class="py-1 rounded bg-emerald-600 text-white font-bold text-[9px] border border-emerald-500">Forward</button>
+        <button id="drawer-live-mode-down" class="py-1 rounded bg-slate-800 text-slate-300 hover:text-white font-bold text-[9px] border border-slate-700">Down</button>
+        <button id="drawer-live-mode-persp" class="py-1 rounded bg-slate-800 text-slate-300 hover:text-white font-bold text-[9px] border border-slate-700">Perspective</button>
       </div>
-      <input id="input-live-spread" type="range" min="20" max="135" step="5" value="40" class="w-full accent-emerald-400 bg-slate-800 rounded h-1 cursor-pointer">
+
+      <!-- Beam Rotation Control -->
+      <div class="pt-1 border-t border-slate-800/80 space-y-1">
+        <div class="flex justify-between text-[11px]">
+          <span class="text-emerald-300 font-semibold">Beam Azimuth Rotation</span>
+          <span id="val-live-rot-num" class="text-white font-bold">0° (Bow)</span>
+        </div>
+        <input id="input-live-rot" type="range" min="-180" max="180" step="5" value="0" class="w-full accent-emerald-400 bg-slate-800 rounded h-1 cursor-pointer">
+        <div class="flex gap-1 pt-0.5">
+          <button id="btn-rot-port90" class="flex-1 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[8px] font-bold">-90° Port</button>
+          <button id="btn-rot-port45" class="flex-1 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[8px] font-bold">-45°</button>
+          <button id="btn-rot-zero" class="flex-1 py-0.5 rounded bg-emerald-800/80 hover:bg-emerald-700 text-white text-[8px] font-bold">0° Bow</button>
+          <button id="btn-rot-stbd45" class="flex-1 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[8px] font-bold">+45°</button>
+          <button id="btn-rot-stbd90" class="flex-1 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[8px] font-bold">+90° Stbd</button>
+        </div>
+      </div>
+
+      <div class="pt-1 border-t border-slate-800/80 space-y-1">
+        <div class="flex justify-between text-[11px]">
+          <span class="text-emerald-300 font-semibold">LiveScope Tilt Angle</span>
+          <span id="val-live-tilt-num" class="text-white font-bold">45°</span>
+        </div>
+        <input id="input-live-tilt" type="range" min="20" max="90" step="5" value="45" class="w-full accent-emerald-400 bg-slate-800 rounded h-1 cursor-pointer">
+        <div class="flex justify-between text-[10px]">
+          <span class="text-slate-400">Beam Spread Width</span>
+          <span id="val-live-spread-num" class="text-white font-bold">40°</span>
+        </div>
+        <input id="input-live-spread" type="range" min="20" max="135" step="5" value="40" class="w-full accent-emerald-400 bg-slate-800 rounded h-1 cursor-pointer">
+      </div>
     </div>
 
     <div class="bg-slate-950 p-2 rounded-xl border border-amber-900/50">

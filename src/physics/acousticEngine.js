@@ -53,29 +53,35 @@ export function getDepthAt(xOrRelZ, maybeRelZ) {
 }
 
 /**
- * Raycasts forward from the bow transducer along an acoustic angle to locate lakebed intersection.
+ * Raycasts from the bow transducer along an acoustic angle and azimuth to locate lakebed intersection.
  *
  * @param {number} angleRad - Beam angle in radians from horizontal downwards.
  * @param {number} maxReachFt - Maximum acoustic range in feet.
  * @param {number} bowZ - Bow transducer Z coordinate in world space.
  * @param {number} [lateralX=0] - Lateral offset in feet.
+ * @param {number} [azimuthRad=0] - Azimuth heading in radians (0 = straight ahead along +Z).
  * @returns {{ r: number, fwd: number, depth: number, hitBottom: boolean }}
  */
-export function getLiveRayReach(angleRad, maxReachFt, bowZ, lateralX = 0) {
+export function getLiveRayReach(angleRad, maxReachFt, bowZ, lateralX = 0, azimuthRad = 0) {
   const state = simState.get();
   const txDepth = state.txDepth;
   const sinA = Math.sin(angleRad);
   const cosA = Math.cos(angleRad);
+  const cosAz = Math.cos(azimuthRad);
+  const sinAz = Math.sin(azimuthRad);
   const step = 0.8;
 
   for (let r = step; r <= maxReachFt; r += step) {
-    const fwd = r * cosA;
+    const horizDist = r * cosA;
+    const fwdZ = horizDist * cosAz;
+    const sideX = lateralX + horizDist * sinAz;
     const d = txDepth + r * sinA;
-    const bedD = getDepthAt(lateralX, bowZ + fwd);
+    const bedD = getDepthAt(sideX, bowZ + fwdZ);
     if (d >= bedD) {
       const prevR = r - step;
+      const prevHoriz = prevR * cosA;
       const prevD = txDepth + prevR * sinA;
-      const prevBed = getDepthAt(lateralX, bowZ + prevR * cosA);
+      const prevBed = getDepthAt(lateralX + prevHoriz * sinAz, bowZ + prevHoriz * cosAz);
       const denom = (d - prevD) - (bedD - prevBed);
       const frac = Math.max(0, Math.min(1, denom !== 0 ? (prevBed - prevD) / denom : 0.5));
       const hitR = Math.min(maxReachFt, prevR + frac * step);
@@ -115,45 +121,122 @@ export function isTargetIn2DCone(relZ, lateralX, depthFt) {
 }
 
 /**
- * Evaluates whether a target is inside the Panoptix LiveScope phased-array forward fan.
+ * Evaluates whether a target is inside the Panoptix LiveScope phased-array beam
+ * across Forward, Down, and Perspective directional modes, accounting for beam azimuth rotation.
  *
- * @param {number} relZ - Target Z coordinate.
- * @param {number} lateralX - Lateral distance (ft).
+ * @param {number} relZ - Target Z coordinate in lake frame.
+ * @param {number} lateralX - Lateral distance from keel line (ft).
  * @param {number} depthFt - Target depth (ft).
- * @returns {false | { fwdDist: number, depth: number, r3D: number, angle: number }}
+ * @returns {false | { fwdDist: number, depth: number, r3D: number, angle: number, beamX: number, beamY: number, beamZ: number }}
  */
 export function isTargetInLiveScope(relZ, lateralX, depthFt) {
   const state = simState.get();
   if (!state.power['live']) return false;
   const txZ = state.boatZ + state.txOffsetBow;
   const txDepth = state.txDepth;
-  const fwdDist = relZ - txZ;
-  if (fwdDist < 0.2) return false;
+  const mode = state.liveMode || 'forward';
+  const rotationDeg = state.liveRotationDeg || 0;
+  const rotRad = (rotationDeg * Math.PI) / 180;
+
+  // Relative vector from bow transducer to target in lake coordinates
+  const dX = lateralX;
+  const dZ = relZ - txZ;
+  const dY = Math.max(0.05, depthFt - txDepth);
+
+  // Rotate target coordinates into the beam's local reference frame
+  // rotRad = 0 -> beam directed straight forward along +dZ (boat travel heading)
+  // rotRad > 0 -> beam rotated clockwise / to starboard (+dX)
+  // rotRad < 0 -> beam rotated counter-clockwise / to port (-dX)
+  const beamForward = dZ * Math.cos(rotRad) + dX * Math.sin(rotRad);
+  const beamCross = -dZ * Math.sin(rotRad) + dX * Math.cos(rotRad);
 
   const bedDepth = getDepthAt(lateralX, relZ);
   if (depthFt > bedDepth + 0.2) return false;
 
-  const dy = Math.max(0.1, depthFt - txDepth);
-  const r2D = Math.hypot(fwdDist, dy);
-  const r3D = Math.hypot(fwdDist, dy, lateralX);
   const maxLiveRange = 60;
+  const r3D = Math.hypot(beamForward, beamCross, dY);
   if (r3D > maxLiveRange) return false;
 
-  const targetAngleRad = Math.atan2(dy, fwdDist);
-  const tiltRad = (state.liveTiltDeg * Math.PI) / 180;
-  const spreadRad = (state.liveSpreadDeg * Math.PI) / 180;
-  const minAngle = tiltRad - spreadRad / 2;
-  const maxAngle = tiltRad + spreadRad / 2;
-  if (targetAngleRad < minAngle || targetAngleRad > maxAngle) return false;
+  if (mode === 'perspective') {
+    // PERSPECTIVE MODE:
+    // Transducer oriented horizontally for shallow-water shoreline scanning.
+    // Wide horizontal fan (135° total azimuth = ±67.5°), narrow vertical elevation slice (~20°).
+    if (beamForward < 0.2) return false;
 
-  const rayHit = getLiveRayReach(targetAngleRad, maxLiveRange, txZ, lateralX);
-  if (r2D > rayHit.r + 0.4) return false;
+    // Azimuth coverage check (135° horizontal sweep)
+    const horizAngle = Math.atan2(Math.abs(beamCross), beamForward);
+    const maxHorizAngle = (135 / 2) * Math.PI / 180;
+    if (horizAngle > maxHorizAngle) return false;
 
-  const azimuthRad = Math.atan2(Math.abs(lateralX), r2D);
-  const maxAzimuthRad = (20 / 2) * Math.PI / 180;
-  if (azimuthRad > maxAzimuthRad) return false;
+    // Vertical elevation thickness check (20° beam thickness)
+    const vertAngle = Math.atan2(dY, Math.hypot(beamForward, beamCross));
+    const maxVertAngle = (22 / 2) * Math.PI / 180;
+    if (vertAngle > maxVertAngle) return false;
 
-  return { fwdDist, depth: depthFt, r3D, angle: targetAngleRad };
+    return {
+      fwdDist: beamForward,
+      depth: depthFt,
+      r3D,
+      angle: vertAngle,
+      beamX: beamCross,
+      beamY: dY,
+      beamZ: beamForward
+    };
+  } else if (mode === 'down') {
+    // DOWN MODE:
+    // LiveScope transducer pointed straight down beneath the hull.
+    // 135° fore-and-aft / span slice beneath boat, 20° cross-beam thickness.
+    if (dY < 0.5) return false;
+
+    const spanDist = Math.abs(beamForward);
+    const downSpreadRad = (135 / 2) * Math.PI / 180;
+    const vertAngleFromNadir = Math.atan2(spanDist, dY);
+    if (vertAngleFromNadir > downSpreadRad) return false;
+
+    // Cross-beam thickness
+    const crossAngle = Math.atan2(Math.abs(beamCross), Math.hypot(spanDist, dY));
+    const maxCrossAngle = (20 / 2) * Math.PI / 180;
+    if (crossAngle > maxCrossAngle) return false;
+
+    return {
+      fwdDist: beamForward,
+      depth: depthFt,
+      r3D,
+      angle: vertAngleFromNadir,
+      beamX: beamCross,
+      beamY: dY,
+      beamZ: beamForward
+    };
+  } else {
+    // FORWARD MODE (Default):
+    // Phased array fan projected ahead along beam azimuth.
+    if (beamForward < 0.2) return false;
+
+    const r2D = Math.hypot(beamForward, dY);
+    const targetAngleRad = Math.atan2(dY, beamForward);
+    const tiltRad = ((state.liveTiltDeg ?? 45) * Math.PI) / 180;
+    const spreadRad = ((state.liveSpreadDeg ?? 40) * Math.PI) / 180;
+    const minAngle = tiltRad - spreadRad / 2;
+    const maxAngle = tiltRad + spreadRad / 2;
+    if (targetAngleRad < minAngle || targetAngleRad > maxAngle) return false;
+
+    const rayHit = getLiveRayReach(targetAngleRad, maxLiveRange, txZ, lateralX, rotRad);
+    if (r2D > rayHit.r + 0.4) return false;
+
+    const azimuthRad = Math.atan2(Math.abs(beamCross), r2D);
+    const maxAzimuthRad = (20 / 2) * Math.PI / 180;
+    if (azimuthRad > maxAzimuthRad) return false;
+
+    return {
+      fwdDist: beamForward,
+      depth: depthFt,
+      r3D,
+      angle: targetAngleRad,
+      beamX: beamCross,
+      beamY: dY,
+      beamZ: beamForward
+    };
+  }
 }
 
 /**
