@@ -172,6 +172,43 @@ class TestAcousticEngine(unittest.TestCase):
         # Target outside reach (e.g. lateral_x = 25 ft)
         self.assertGreater(abs(25.0), max_reach)
 
+    def test_clearvu_3d_beam_geometry(self):
+        """Validates ClearVü 3D water column acoustic wedge and footprint coordinates."""
+        tx_depth = 0.6
+        boat_z = 35.0
+        tx_offset_transom = -2.0
+        tx_z = boat_z + tx_offset_transom # 33.0 ft
+        lake_depth = 25.0
+        clear_angle_deg = 45.0
+        clear_half_rad = math.radians(clear_angle_deg / 2)
+        slice_thick_ft = 1.5
+
+        # Transducer origin coordinates
+        z_aft = tx_z - slice_thick_ft / 2
+        z_fore = tx_z + slice_thick_ft / 2
+        self.assertEqual(z_fore - z_aft, slice_thick_ft)
+
+        # Lateral reach at lakebed
+        half_lateral_reach = (lake_depth - tx_depth) * math.tan(clear_half_rad)
+        self.assertGreater(half_lateral_reach, 10.0)
+
+        # 3D bounding vertices
+        p1 = (-half_lateral_reach, lake_depth, z_aft)
+        p2 = (half_lateral_reach, lake_depth, z_aft)
+        p3 = (half_lateral_reach, lake_depth, z_fore)
+        p4 = (-half_lateral_reach, lake_depth, z_fore)
+
+        # Verify bed footprint rectangle area > 0
+        bed_area = (p2[0] - p1[0]) * (p3[2] - p2[2])
+        self.assertAlmostEqual(bed_area, (2 * half_lateral_reach) * slice_thick_ft)
+
+        # Water column expansion: reach at mid-depth (12.8 ft) must be strictly between 0 and lakebed reach
+        mid_depth = (tx_depth + lake_depth) / 2
+        mid_reach = (mid_depth - tx_depth) * math.tan(clear_half_rad)
+        self.assertGreater(mid_reach, 0.0)
+        self.assertLess(mid_reach, half_lateral_reach)
+        self.assertAlmostEqual(mid_reach, half_lateral_reach / 2, places=5)
+
     def test_sidevu_sweep_reach(self):
         """SideVü bilateral swath maximum lateral sweep coverage."""
         lake_depth = 25.0

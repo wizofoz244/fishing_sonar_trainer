@@ -261,17 +261,69 @@ function renderAcousticBeams3D(ctx, ox, oy, s, depth, lakeWidthHalf = 65) {
     ctx.fill();
   }
 
-  // 2. ClearVü Ribbon
+  // 2. ClearVü Razor Wedge & Ribbon
   if (state.power['clear']) {
     const clearHalfAngleRad = (((state.clearAngleDeg || 45) / 2) * Math.PI) / 180;
     const halfLateralReach = (depth - txDepth) * Math.tan(clearHalfAngleRad);
     const sliceThickFt = 1.5;
+    const zAft = txZ - sliceThickFt / 2;
+    const zFore = txZ + sliceThickFt / 2;
 
-    const p1 = project3D(-halfLateralReach, depth, txZ - sliceThickFt / 2, ox, oy, s);
-    const p2 = project3D(halfLateralReach, depth, txZ - sliceThickFt / 2, ox, oy, s);
-    const p3 = project3D(halfLateralReach, depth, txZ + sliceThickFt / 2, ox, oy, s);
-    const p4 = project3D(-halfLateralReach, depth, txZ + sliceThickFt / 2, ox, oy, s);
+    const txClearFore = project3D(0, txDepth, zFore, ox, oy, s);
+    const txClearAft = project3D(0, txDepth, zAft, ox, oy, s);
 
+    const d1 = getDepthAt(-halfLateralReach, zAft);
+    const d2 = getDepthAt(halfLateralReach, zAft);
+    const d3 = getDepthAt(halfLateralReach, zFore);
+    const d4 = getDepthAt(-halfLateralReach, zFore);
+
+    const p1 = project3D(-halfLateralReach, d1, zAft, ox, oy, s);
+    const p2 = project3D(halfLateralReach, d2, zAft, ox, oy, s);
+    const p3 = project3D(halfLateralReach, d3, zFore, ox, oy, s);
+    const p4 = project3D(-halfLateralReach, d4, zFore, ox, oy, s);
+
+    // Water-column acoustic curtain gradient
+    const clearCurtainGrad = ctx.createLinearGradient(txPos.x, txPos.y, pKeelBottom.x, pKeelBottom.y);
+    clearCurtainGrad.addColorStop(0, 'rgba(245, 158, 11, 0.45)');
+    clearCurtainGrad.addColorStop(0.5, 'rgba(217, 119, 6, 0.20)');
+    clearCurtainGrad.addColorStop(1, 'rgba(180, 83, 9, 0.05)');
+
+    // Fore curtain face
+    ctx.fillStyle = clearCurtainGrad;
+    ctx.beginPath();
+    ctx.moveTo(txClearFore.x, txClearFore.y);
+    ctx.lineTo(p4.x, p4.y);
+    ctx.lineTo(p3.x, p3.y);
+    ctx.closePath();
+    ctx.fill();
+
+    // Aft curtain face
+    ctx.beginPath();
+    ctx.moveTo(txClearAft.x, txClearAft.y);
+    ctx.lineTo(p1.x, p1.y);
+    ctx.lineTo(p2.x, p2.y);
+    ctx.closePath();
+    ctx.fill();
+
+    // Lateral port/starboard edge curtains
+    ctx.fillStyle = 'rgba(245, 158, 11, 0.22)';
+    ctx.beginPath();
+    ctx.moveTo(txClearAft.x, txClearAft.y);
+    ctx.lineTo(txClearFore.x, txClearFore.y);
+    ctx.lineTo(p4.x, p4.y);
+    ctx.lineTo(p1.x, p1.y);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(txClearAft.x, txClearAft.y);
+    ctx.lineTo(txClearFore.x, txClearFore.y);
+    ctx.lineTo(p3.x, p3.y);
+    ctx.lineTo(p2.x, p2.y);
+    ctx.closePath();
+    ctx.fill();
+
+    // Lakebed footprint ribbon
     ctx.beginPath();
     ctx.moveTo(p1.x, p1.y);
     ctx.lineTo(p2.x, p2.y);
@@ -282,6 +334,20 @@ function renderAcousticBeams3D(ctx, ox, oy, s, depth, lakeWidthHalf = 65) {
     ctx.fill();
     ctx.strokeStyle = 'rgba(251, 191, 36, 0.85)';
     ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    // Acoustic beam boundary guide lines from transducer to lakebed
+    ctx.strokeStyle = 'rgba(251, 191, 36, 0.65)';
+    ctx.lineWidth = 1.1;
+    ctx.beginPath();
+    ctx.moveTo(txClearFore.x, txClearFore.y);
+    ctx.lineTo(p4.x, p4.y);
+    ctx.moveTo(txClearFore.x, txClearFore.y);
+    ctx.lineTo(p3.x, p3.y);
+    ctx.moveTo(txClearAft.x, txClearAft.y);
+    ctx.lineTo(p1.x, p1.y);
+    ctx.moveTo(txClearAft.x, txClearAft.y);
+    ctx.lineTo(p2.x, p2.y);
     ctx.stroke();
   }
 
