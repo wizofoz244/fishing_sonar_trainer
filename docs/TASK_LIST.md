@@ -23,4 +23,5 @@
 - [x] Merge all feature branches into default branch `main` and close all tracking issues
 - [x] Configure GitHub issue templates, contact links, and banner direct template chooser with email fallback (`.github/ISSUE_TEMPLATE/`, `index.html`, `tests/test_acoustics.py`) - [Issue #10](https://github.com/wizofoz244/fishing_sonar_trainer/issues/10)
 - [x] Remove personal email address from simulator UI, credits modal, and issue template configuration (`index.html`, `.github/ISSUE_TEMPLATE/config.yml`, `tests/test_acoustics.py`) - [Issue #11](https://github.com/wizofoz244/fishing_sonar_trainer/issues/11)
+- [x] Add user feedback survey and issue reporting form link in header, credits modal, and documentation (`index.html`, `README.md`, `tests/test_acoustics.py`) - [Issue #12](https://github.com/wizofoz244/fishing_sonar_trainer/issues/12)
 

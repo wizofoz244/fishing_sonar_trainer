@@ -376,6 +376,34 @@ class TestUIStructure(unittest.TestCase):
             config_content = f.read()
         self.assertNotIn("mwoswald@gmail.com", config_content, "Personal email must not be in issue template config")
 
+    def test_feedback_form_link(self) -> None:
+        """Verifies presence, accessibility attributes, and links for the Google Feedback Form.
+
+        Returns:
+            None.
+
+        Raises:
+            AssertionError: If feedback form link or security attributes are missing or malformed.
+        """
+        with open("index.html", "r", encoding="utf-8") as f:
+            html = f.read()
+
+        feedback_url = "https://forms.gle/FGJarxj8KERkqvux5"
+
+        # Verify header button link exists
+        self.assertIn('id="btn-feedback"', html, "Header feedback link must have id 'btn-feedback'")
+        self.assertIn(f'href="{feedback_url}"', html, f"Feedback link must point to {feedback_url}")
+        self.assertIn('target="_blank"', html, "Feedback link must open in a new tab")
+        self.assertIn('rel="noopener noreferrer"', html, "Feedback link must contain rel='noopener noreferrer'")
+
+        # Verify presence in credits drawer
+        self.assertIn("Feedback Survey Form", html, "Credits drawer must link to the feedback survey form")
+
+        # Verify presence in README.md
+        with open("README.md", "r", encoding="utf-8") as f:
+            readme = f.read()
+        self.assertIn(feedback_url, readme, "README.md must reference the feedback form link")
+
 
 if __name__ == "__main__":
     unittest.main()

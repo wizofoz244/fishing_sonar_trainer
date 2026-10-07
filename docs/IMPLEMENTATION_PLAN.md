@@ -54,3 +54,10 @@ fishing_sonar_trainer/
 - `src/renderers/chirp2D.js`: Conical CHIRP buffer with hyperbolic arches dynamically scaling with cone angle.
 - `src/renderers/sonarSuite.js`: MFD coordinator, ping sampling, layout and standby screens.
 - `src/ui/`: Helm dock, drawers, target tray, cross-screen telemetry indicator, modals.
+
+## 4. User Feedback & Issue Reporting Integration
+- Direct header button (`#btn-feedback`) linking to Google Forms issue tracker: `https://forms.gle/FGJarxj8KERkqvux5`.
+- Credits modal integration linking to feedback survey form and GitHub issues.
+- Community feedback documentation in `README.md`.
+- Automated regression test suite (`tests/test_acoustics.py`).
+
