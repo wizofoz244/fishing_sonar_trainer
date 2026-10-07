@@ -68,4 +68,14 @@ fishing_sonar_trainer/
 - **Network Copyleft**: Any party running a modified version over a network/web service is legally obligated to provide the full corresponding source code to users under the AGPLv3.
 - **In-App Modal Attribution**: Displayed in `#drawer-credits` modal with live link to `LICENSE`.
 
+## 6. Release Versioning & Build Metadata
+- **Version Identifier**: `v1.0.0`
+- **Build Date**: `2026-10-07`
+- **Display Locations**:
+  - Header badge in navigation bar (`index.html`)
+  - Credits and attribution modal (`index.html`, `#drawer-credits`)
+  - Package manifest metadata (`package.json`)
+  - Project documentation & status badges (`README.md`)
+- **Release Tagging**: Annotated Git tag `v1.0.0` pointing to production release on `main`.
+
 

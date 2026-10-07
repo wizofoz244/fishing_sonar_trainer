@@ -1,6 +1,7 @@
 {
   "name": "fishing_sonar_trainer",
   "version": "1.0.0",
+  "buildDate": "2026-10-07",
   "description": "Garmin GPSMAP® Multi-Sonar & 3D Lake Simulator — Interactive Marine Acoustics Simulator",
   "type": "module",
   "scripts": {

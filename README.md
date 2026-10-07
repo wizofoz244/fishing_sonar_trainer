@@ -1,6 +1,12 @@
 # Garmin GPSMAP® Multi-Sonar & 3D Lake Simulator
 
+[![Version](https://img.shields.io/badge/version-v1.0.0-blue.svg)](https://github.com/wizofoz244/fishing_sonar_trainer/releases/tag/v1.0.0)
+[![Build Date](https://img.shields.io/badge/build_date-2026--10--07-informational.svg)](#)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](file:///Users/oz/Develop/fishing_sonar_trainer/LICENSE)
+
 An interactive, high-fidelity marine acoustics and multi-frequency sonar simulator modeling real-world physics, beam geometry, bathymetric contours, and marine electronics displays (Panoptix LiveScope™, SideVü™ UHD, ClearVü™ DownScan, and Traditional 2D CHIRP).
+
+**Current Version:** `v1.0.0` (Build Date: `2026-10-07`)
 
 ## SDLC Documentation Index
 | Document | Description |

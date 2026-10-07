@@ -442,6 +442,34 @@ class TestUIStructure(unittest.TestCase):
         self.assertIn("Network Copyleft", html)
         self.assertIn("Attribution Requirement", html)
 
+    def test_version_and_build_date(self) -> None:
+        """Verifies version v1.0.0 and build date across index.html, package.json, and README.md.
+
+        Returns:
+            None.
+
+        Raises:
+            AssertionError: If version or build date metadata is missing or inconsistent.
+        """
+        # 1. Verify package.json contains version 1.0.0 and buildDate 2026-10-07
+        with open("package.json", "r", encoding="utf-8") as f:
+            pkg = f.read()
+        self.assertIn('"version": "1.0.0"', pkg)
+        self.assertIn('"buildDate": "2026-10-07"', pkg)
+
+        # 2. Verify index.html contains version and build date in header and credits modal
+        with open("index.html", "r", encoding="utf-8") as f:
+            html = f.read()
+        self.assertIn("v1.0.0 (2026-10-07)", html, "Header must display v1.0.0 (2026-10-07)")
+        self.assertIn("v1.0.0", html)
+        self.assertIn("2026-10-07", html)
+
+        # 3. Verify README.md includes version badge
+        with open("README.md", "r", encoding="utf-8") as f:
+            readme = f.read()
+        self.assertIn("v1.0.0", readme)
+        self.assertIn("2026-10-07", readme)
+
 
 if __name__ == "__main__":
     unittest.main()

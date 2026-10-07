@@ -26,4 +26,5 @@
 - [x] Add user feedback survey and issue reporting form link in header, credits modal, and documentation (`index.html`, `README.md`, `tests/test_acoustics.py`) - [Issue #12](https://github.com/wizofoz244/fishing_sonar_trainer/issues/12)
 - [x] Add direct Google feedback survey form link to top disclaimer notice banner (`index.html`, `tests/test_acoustics.py`) - [Issue #14](https://github.com/wizofoz244/fishing_sonar_trainer/issues/14)
 - [x] Adopt GNU AGPLv3 open-source license with author attribution requirement and network copyleft (`LICENSE`, `index.html`, `README.md`, `tests/test_acoustics.py`) - [Issue #16](https://github.com/wizofoz244/fishing_sonar_trainer/issues/16)
+- [x] Add version v1.0.0 and build date to helm header, credits modal, package.json, documentation, and create release tag v1.0.0 (`index.html`, `package.json`, `README.md`, `tests/test_acoustics.py`) - [Issue #18](https://github.com/wizofoz244/fishing_sonar_trainer/issues/18)
 
