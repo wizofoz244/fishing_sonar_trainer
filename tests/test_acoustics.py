@@ -344,14 +344,33 @@ class TestUIStructure(unittest.TestCase):
         self.assertIn("No guarantee", html, "Notice must state that no guarantee is given")
         self.assertIn("trademarks", html, "Notice must mention trademark ownership")
 
-        # Verify GitHub issue link and security attributes
-        github_issues_url = "https://github.com/wizofoz244/fishing_sonar_trainer/issues/new"
-        self.assertIn(github_issues_url, html, "Notice must include direct link to GitHub issues")
+        # Verify GitHub issue template chooser link and security attributes
+        github_issues_url = "https://github.com/wizofoz244/fishing_sonar_trainer/issues/new/choose"
+        self.assertIn(github_issues_url, html, "Notice must include direct link to GitHub issue template chooser")
         self.assertIn('target="_blank"', html, "GitHub issues link must open in a new tab")
         self.assertIn('rel="noopener noreferrer"', html, "External link must contain rel='noopener noreferrer'")
 
+        # Verify email fallback link for non-GitHub users
+        self.assertIn("mailto:mwoswald@gmail.com", html, "Notice must include mailto fallback link for non-GitHub users")
+
         # Verify dismiss button
         self.assertIn("banner-disclaimer", html, "Dismiss button must target the disclaimer banner")
+
+    def test_issue_templates_exist(self) -> None:
+        """Verifies presence and configuration of GitHub issue templates.
+
+        Returns:
+            None.
+
+        Raises:
+            AssertionError: If issue templates or config.yml are missing.
+        """
+        import os
+        template_dir = os.path.join(".github", "ISSUE_TEMPLATE")
+        self.assertTrue(os.path.isdir(template_dir), "Issue template directory must exist")
+        self.assertTrue(os.path.isfile(os.path.join(template_dir, "bug_report.md")), "Bug report template must exist")
+        self.assertTrue(os.path.isfile(os.path.join(template_dir, "feature_request.md")), "Feature request template must exist")
+        self.assertTrue(os.path.isfile(os.path.join(template_dir, "config.yml")), "Template config.yml must exist")
 
 
 if __name__ == "__main__":

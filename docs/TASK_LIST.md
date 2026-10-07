@@ -21,4 +21,5 @@
 - [x] Render realistic bottom-anchored acoustic boulders and sonar shadows (`src/renderers/liveScope.js`, `src/physics/targets.js`, `tests/test_acoustics.py`) - [Issue #8](https://github.com/wizofoz244/fishing_sonar_trainer/issues/8)
 - [x] Add responsive top disclaimer notice banner with direct GitHub issue submission link (`index.html`, `tests/test_acoustics.py`) - [Issue #9](https://github.com/wizofoz244/fishing_sonar_trainer/issues/9)
 - [x] Merge all feature branches into default branch `main` and close all tracking issues
+- [x] Configure GitHub issue templates, contact links, and banner direct template chooser with email fallback (`.github/ISSUE_TEMPLATE/`, `index.html`, `tests/test_acoustics.py`) - [Issue #10](https://github.com/wizofoz244/fishing_sonar_trainer/issues/10)
 

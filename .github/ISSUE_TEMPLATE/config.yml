@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Email Feedback (No GitHub account needed)
+    url: mailto:mwoswald@gmail.com?subject=Fishing%20Sonar%20Simulator%20Feedback
+    about: If you do not have a GitHub account, you can email feedback or bug reports directly.
