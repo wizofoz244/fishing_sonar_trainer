@@ -82,6 +82,22 @@ export function renderLiveScopeMFD(canvas, ctx) {
     ctx.closePath();
     ctx.stroke();
 
+    // Boat hull icon at top-down origin
+    ctx.save();
+    ctx.fillStyle = '#38bdf8';
+    ctx.strokeStyle = '#0284c7';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(pOriginX, pOriginY - 7);
+    ctx.lineTo(pOriginX + 4, pOriginY);
+    ctx.lineTo(pOriginX + 3, pOriginY + 5);
+    ctx.lineTo(pOriginX - 3, pOriginY + 5);
+    ctx.lineTo(pOriginX - 4, pOriginY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+
     getScreenCoords = (hit) => {
       // hit.beamX (lateral cross), hit.beamZ (forward)
       return {
@@ -119,6 +135,12 @@ export function renderLiveScopeMFD(canvas, ctx) {
     ctx.moveTo(dOriginX, dOriginY);
     ctx.lineTo(dOriginX + 30 * scaleSpan, dOriginY + 45 * scaleDepth);
     ctx.stroke();
+
+    // Boat transducer icon at top center
+    ctx.save();
+    ctx.fillStyle = '#34d399';
+    ctx.fillRect(dOriginX - 5, dOriginY - 4, 10, 4);
+    ctx.restore();
 
     // Lakebed bottom contour beneath boat
     ctx.beginPath();
@@ -180,7 +202,7 @@ export function renderLiveScopeMFD(canvas, ctx) {
     };
   }
 
-  // Draw on-screen LiveScope Mode & Rotation Telemetry
+  // Draw on-screen LiveScope Mode & Rotation Telemetry Banner + Rosette
   ctx.save();
   ctx.font = 'bold 8.5px monospace';
   const modeLabel = `${mode.toUpperCase()} MODE • ROT: ${rotationDeg >= 0 ? '+' : ''}${rotationDeg}°`;
@@ -191,6 +213,51 @@ export function renderLiveScopeMFD(canvas, ctx) {
   ctx.strokeRect(w - 150, 4, 146, 14);
   ctx.fillStyle = '#6ee7b7';
   ctx.fillText(modeLabel, w - 146, 14);
+
+  // Tactical LiveScope Beam Heading Dial / Rosette
+  const dialX = w - 24;
+  const dialY = 38;
+  const dialR = 14;
+
+  ctx.beginPath();
+  ctx.arc(dialX, dialY, dialR, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(2, 6, 23, 0.85)';
+  ctx.fill();
+  ctx.strokeStyle = '#047857';
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+
+  // Boat heading reference (0° = straight UP towards Bow)
+  ctx.strokeStyle = 'rgba(148, 163, 184, 0.5)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(dialX, dialY - dialR + 2);
+  ctx.lineTo(dialX, dialY + dialR - 2);
+  ctx.stroke();
+
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = 'bold 6.5px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('N', dialX, dialY - dialR - 1);
+
+  // Steered Beam Azimuth Needle
+  const needleAngle = -Math.PI / 2 + rotRad;
+  const nx = dialX + Math.cos(needleAngle) * (dialR - 3);
+  const ny = dialY + Math.sin(needleAngle) * (dialR - 3);
+
+  ctx.strokeStyle = '#34d399';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(dialX, dialY);
+  ctx.lineTo(nx, ny);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(nx, ny, 2.2, 0, Math.PI * 2);
+  ctx.fillStyle = '#facc15';
+  ctx.fill();
+
+  ctx.textAlign = 'start';
   ctx.restore();
 
   structures.forEach(st => {

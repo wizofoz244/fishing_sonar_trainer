@@ -16,15 +16,15 @@ export const structures = [
 ];
 
 export const fishList = [
-  { id: 101, tag: 'A1', name: 'Keel Bass',     shapeHint: '2D Arch & ClearVü Grain', x: 0.0, y: 15.0, baseY: 15.0, z: 80,  size: 1.8, speed: 0.0,   color: '#38bdf8' },
+  { id: 101, tag: 'A1', name: 'Keel Bass',     shapeHint: '2D Arch & ClearVü Grain', x: 0.0, y: 15.0, baseY: 15.0, z: 68,  size: 1.8, speed: 0.0,   color: '#38bdf8' },
   { id: 102, tag: 'A2', name: 'Keel Bass',     shapeHint: '2D Arch & ClearVü Grain', x: 0.0, y: 19.0, baseY: 19.0, z: 175, size: 1.6, speed: 0.0,   color: '#38bdf8' },
   { id: 103, tag: 'A3', name: 'Keel Bass',     shapeHint: '2D Arch & ClearVü Grain', x: 0.0, y: 13.0, baseY: 13.0, z: 275, size: 1.7, speed: 0.0,   color: '#38bdf8' },
   { id: 104, tag: 'A4', name: 'Keel Bass',     shapeHint: '2D Arch & ClearVü Grain', x: 0.0, y: 17.5, baseY: 17.5, z: 360, size: 1.5, speed: 0.0,   color: '#38bdf8' },
-  { id: 1,   tag: 'B1', name: "35' Port Bass", shapeHint: 'SideVü Port Echo + Shadow', x: -35, y: 14.0, baseY: 14.0, z: 50,  size: 1.6, speed: -0.01, color: '#c084fc' },
+  { id: 1,   tag: 'B1', name: "25' Port Bass", shapeHint: 'SideVü Port Echo + Shadow', x: -25, y: 14.0, baseY: 14.0, z: 52,  size: 1.6, speed: -0.01, color: '#c084fc' },
   { id: 2,   tag: 'B2', name: "33' Port Bass", shapeHint: 'SideVü Port Echo + Shadow', x: -33, y: 15.5, baseY: 15.5, z: 80,  size: 1.5, speed: -0.01, color: '#c084fc' },
   { id: 3,   tag: 'B3', name: "36' Port Bass", shapeHint: 'SideVü Port Echo + Shadow', x: -36, y: 13.5, baseY: 13.5, z: 120, size: 1.6, speed: -0.01, color: '#c084fc' },
   { id: 4,   tag: 'B4', name: "34' Port Bass", shapeHint: 'SideVü Port Echo + Shadow', x: -34, y: 16.5, baseY: 16.5, z: 160, size: 1.7, speed: -0.01, color: '#c084fc' },
-  { id: 11,  tag: 'C1', name: "38' Stbd Bass", shapeHint: 'SideVü Stbd Echo + Shadow', x: 38,  y: 16.0, baseY: 16.0, z: 60,  size: 1.5, speed: 0.01,  color: '#c084fc' },
+  { id: 11,  tag: 'C1', name: "26' Stbd Bass", shapeHint: 'SideVü Stbd Echo + Shadow', x: 26,  y: 15.5, baseY: 15.5, z: 54,  size: 1.5, speed: 0.01,  color: '#c084fc' },
   { id: 12,  tag: 'C2', name: "40' Stbd Bass", shapeHint: 'SideVü Stbd Echo + Shadow', x: 40,  y: 14.5, baseY: 14.5, z: 100, size: 1.6, speed: 0.01,  color: '#c084fc' },
   { id: 13,  tag: 'C3', name: "37' Stbd Bass", shapeHint: 'SideVü Stbd Echo + Shadow', x: 37,  y: 18.0, baseY: 18.0, z: 140, size: 1.5, speed: 0.01,  color: '#c084fc' }
 ];

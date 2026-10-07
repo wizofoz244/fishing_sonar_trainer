@@ -172,6 +172,12 @@
                   <button id="btn-live-mode-down" class="px-1.5 py-0.2 rounded text-slate-400 hover:text-white font-bold text-[7.5px]" title="Down Mode: Directly beneath boat">DOWN</button>
                   <button id="btn-live-mode-persp" class="px-1.5 py-0.2 rounded text-slate-400 hover:text-white font-bold text-[7.5px]" title="Perspective Mode: Top-down wide shallow view">PERSP</button>
                 </div>
+                <!-- Quick Steer Rotation Controls -->
+                <div class="hidden sm:flex items-center bg-slate-900 border border-slate-800 rounded p-0.5 gap-0.5 text-[7px] font-bold text-slate-400">
+                  <button id="btn-quick-rot-port" class="px-1 py-0.2 rounded hover:bg-slate-800 hover:text-white" title="Rotate beam 15° Port">↶-15°</button>
+                  <button id="btn-quick-rot-zero" class="px-1 py-0.2 rounded text-emerald-400 hover:bg-slate-800" title="Center beam straight ahead (0° Bow)">0°</button>
+                  <button id="btn-quick-rot-stbd" class="px-1 py-0.2 rounded hover:bg-slate-800 hover:text-white" title="Rotate beam 15° Starboard">+15°↷</button>
+                </div>
                 <button id="btn-tip-live" class="px-1 py-0.2 rounded bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold text-[8px]" title="How to Read LiveScope">? TIPS</button>
                 <button id="mfd-btn-live" class="px-1.5 py-0.2 rounded bg-emerald-700 text-white font-bold text-[8px]">PWR: ON</button>
                 <button id="btn-max-live" class="text-slate-400 hover:text-white px-0.5" title="Maximize">⛶</button>
@@ -563,6 +569,6 @@
     </div>
   </div>
 
-  <script type="module" src="./src/main.js?v=5"></script>
+  <script type="module" src="./src/main.js?v=6"></script>
 </body>
 </html>

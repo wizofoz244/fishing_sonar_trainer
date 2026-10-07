@@ -59,13 +59,42 @@ function initAngleControls() {
     const headerBtn = document.getElementById(`btn-live-mode-${mKey}`);
     const drawerBtn = document.getElementById(`drawer-live-mode-${mKey}`);
 
-    const setMode = () => {
+    const setMode = (e) => {
+      if (e) e.stopPropagation();
       simState.update({ liveMode: modeName });
     };
 
     if (headerBtn) headerBtn.addEventListener('click', setMode);
     if (drawerBtn) drawerBtn.addEventListener('click', setMode);
   });
+
+  // LiveScope Quick-Steer Rotation buttons in bezel header
+  const quickRotPort = document.getElementById('btn-quick-rot-port');
+  const quickRotZero = document.getElementById('btn-quick-rot-zero');
+  const quickRotStbd = document.getElementById('btn-quick-rot-stbd');
+
+  if (quickRotPort) {
+    quickRotPort.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const cur = simState.get('liveRotationDeg') || 0;
+      const next = Math.max(-180, cur - 15);
+      simState.update({ liveRotationDeg: next });
+    });
+  }
+  if (quickRotZero) {
+    quickRotZero.addEventListener('click', (e) => {
+      e.stopPropagation();
+      simState.update({ liveRotationDeg: 0 });
+    });
+  }
+  if (quickRotStbd) {
+    quickRotStbd.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const cur = simState.get('liveRotationDeg') || 0;
+      const next = Math.min(180, cur + 15);
+      simState.update({ liveRotationDeg: next });
+    });
+  }
 
   // LiveScope Beam Azimuth Rotation
   const liveRotInput = document.getElementById('input-live-rot');
@@ -88,7 +117,8 @@ function initAngleControls() {
   rotPresets.forEach(({ id, val }) => {
     const btn = document.getElementById(id);
     if (btn) {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', (e) => {
+        if (e) e.stopPropagation();
         simState.update({ liveRotationDeg: val });
       });
     }
