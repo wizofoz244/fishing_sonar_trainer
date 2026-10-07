@@ -16,8 +16,8 @@
   - 2D CHIRP Conical Beam Gating: Verified that fish, structures, and lure are dynamically evaluated against depth-dependent cone radius $r_{cone} = (y - txDepth) \cdot \tan(\theta_{cone} / 2)$.
   - ClearVü Razor Slice Gating: Verified that fish, structures, and falling lure are gated by dynamic DownScan lateral reach $(y - txDepth) \cdot \tan(\theta_{clear} / 2) + w \cdot 0.4$.
   - SideVü Bilateral Swath Gating: Verified targets are constrained to maximum lateral sweep reach $(depth - txDepth) \cdot \tan(\theta_{sweep})$, and active falling lures render inside the nadir water column.
-  - Automated Ping Buffer Sampling: Verified `samplePings()` updates `tradHistory`, `clearHistory`, and `sideHistory` with active lure acoustic returns.
-  - User Feedback & Issue Form: Verified direct header button (`#btn-feedback`), credits modal survey link, and README documentation pointing to `https://forms.gle/FGJarxj8KERkqvux5` with secure `target="_blank"` and `rel="noopener noreferrer"` attributes.
+  - User Feedback & Issue Form: Verified direct header button (`#btn-feedback`), top notice banner (`#banner-feedback-link`), credits modal survey link, and README documentation pointing to `https://forms.gle/FGJarxj8KERkqvux5` with secure `target="_blank"` and `rel="noopener noreferrer"` attributes.
+
 
 ## Local Test Server
 To launch and test locally:

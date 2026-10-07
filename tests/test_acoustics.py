@@ -350,6 +350,11 @@ class TestUIStructure(unittest.TestCase):
         self.assertIn('target="_blank"', html, "GitHub issues link must open in a new tab")
         self.assertIn('rel="noopener noreferrer"', html, "External link must contain rel='noopener noreferrer'")
 
+        # Verify Google Feedback Form link in banner
+        feedback_url = "https://forms.gle/FGJarxj8KERkqvux5"
+        self.assertIn('id="banner-feedback-link"', html, "Top banner must include feedback link with id 'banner-feedback-link'")
+        self.assertIn(feedback_url, html, "Top banner must include direct Google Feedback Form URL")
+
         # Verify personal email is not exposed in HTML for privacy
         self.assertNotIn("mwoswald@gmail.com", html, "Personal email must not be exposed anywhere in index.html")
 
