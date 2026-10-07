@@ -62,4 +62,10 @@ fishing_sonar_trainer/
 - Community feedback documentation in `README.md`.
 - Automated regression test suite (`tests/test_acoustics.py`).
 
+## 5. Licensing & Legal Protections
+- **License**: GNU Affero General Public License v3.0 (AGPLv3) (`LICENSE`).
+- **Attribution Policy**: Explicitly requires downstream distributions and derivatives to maintain copyright notice (`Copyright (C) 2026 wizofoz244`) and prominent author credit.
+- **Network Copyleft**: Any party running a modified version over a network/web service is legally obligated to provide the full corresponding source code to users under the AGPLv3.
+- **In-App Modal Attribution**: Displayed in `#drawer-credits` modal with live link to `LICENSE`.
+
 
