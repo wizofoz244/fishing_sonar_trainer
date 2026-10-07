@@ -57,7 +57,9 @@ fishing_sonar_trainer/
 
 ## 4. User Feedback & Issue Reporting Integration
 - Direct header button (`#btn-feedback`) linking to Google Forms issue tracker: `https://forms.gle/FGJarxj8KERkqvux5`.
+- Top notice banner (`#banner-disclaimer`) direct feedback survey link (`#banner-feedback-link`) alongside GitHub issues chooser.
 - Credits modal integration linking to feedback survey form and GitHub issues.
 - Community feedback documentation in `README.md`.
 - Automated regression test suite (`tests/test_acoustics.py`).
+
 
