@@ -22,4 +22,5 @@
 - [x] Add responsive top disclaimer notice banner with direct GitHub issue submission link (`index.html`, `tests/test_acoustics.py`) - [Issue #9](https://github.com/wizofoz244/fishing_sonar_trainer/issues/9)
 - [x] Merge all feature branches into default branch `main` and close all tracking issues
 - [x] Configure GitHub issue templates, contact links, and banner direct template chooser with email fallback (`.github/ISSUE_TEMPLATE/`, `index.html`, `tests/test_acoustics.py`) - [Issue #10](https://github.com/wizofoz244/fishing_sonar_trainer/issues/10)
+- [x] Remove personal email address from simulator UI, credits modal, and issue template configuration (`index.html`, `.github/ISSUE_TEMPLATE/config.yml`, `tests/test_acoustics.py`) - [Issue #11](https://github.com/wizofoz244/fishing_sonar_trainer/issues/11)
 

@@ -350,8 +350,8 @@ class TestUIStructure(unittest.TestCase):
         self.assertIn('target="_blank"', html, "GitHub issues link must open in a new tab")
         self.assertIn('rel="noopener noreferrer"', html, "External link must contain rel='noopener noreferrer'")
 
-        # Verify email fallback link for non-GitHub users
-        self.assertIn("mailto:mwoswald@gmail.com", html, "Notice must include mailto fallback link for non-GitHub users")
+        # Verify personal email is not exposed in HTML for privacy
+        self.assertNotIn("mwoswald@gmail.com", html, "Personal email must not be exposed anywhere in index.html")
 
         # Verify dismiss button
         self.assertIn("banner-disclaimer", html, "Dismiss button must target the disclaimer banner")
@@ -371,6 +371,10 @@ class TestUIStructure(unittest.TestCase):
         self.assertTrue(os.path.isfile(os.path.join(template_dir, "bug_report.md")), "Bug report template must exist")
         self.assertTrue(os.path.isfile(os.path.join(template_dir, "feature_request.md")), "Feature request template must exist")
         self.assertTrue(os.path.isfile(os.path.join(template_dir, "config.yml")), "Template config.yml must exist")
+
+        with open(os.path.join(template_dir, "config.yml"), "r", encoding="utf-8") as f:
+            config_content = f.read()
+        self.assertNotIn("mwoswald@gmail.com", config_content, "Personal email must not be in issue template config")
 
 
 if __name__ == "__main__":
