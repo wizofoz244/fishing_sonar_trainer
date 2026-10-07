@@ -168,9 +168,9 @@ export function isTargetInLiveScope(relZ, lateralX, depthFt) {
     const maxHorizAngle = (135 / 2) * Math.PI / 180;
     if (horizAngle > maxHorizAngle) return false;
 
-    // Vertical elevation thickness check (20° beam thickness)
+    // Vertical elevation thickness check (Garmin Perspective mode scans water column from surface down to ~45°)
     const vertAngle = Math.atan2(dY, Math.hypot(beamForward, beamCross));
-    const maxVertAngle = (22 / 2) * Math.PI / 180;
+    const maxVertAngle = (45 * Math.PI) / 180;
     if (vertAngle > maxVertAngle) return false;
 
     return {

@@ -465,8 +465,8 @@ function renderAcousticBeams3D(ctx, ox, oy, s, depth, lakeWidthHalf = 65) {
 
     let tiltRad, spreadRad, azimuthSpreadRad;
     if (mode === 'perspective') {
-      tiltRad = (15 * Math.PI) / 180; // Shallow downward tilt
-      spreadRad = (20 * Math.PI) / 180; // Thin vertical elevation slice
+      tiltRad = (22 * Math.PI) / 180; // Shallow downward tilt
+      spreadRad = (35 * Math.PI) / 180; // Vertical elevation slice
       azimuthSpreadRad = (135 * Math.PI) / 180; // Wide horizontal fan
     } else if (mode === 'down') {
       tiltRad = (90 * Math.PI) / 180; // Directly down
@@ -692,6 +692,8 @@ function renderStructures3D(ctx, ox, oy, s) {
       const trunkRadius = Math.max(1.2, (st.width || 8) * 0.16);
       const isSelected = (state.selectedTargetId === st.id);
 
+      const hitLive = state.showIllustrations && isTargetInLiveScope(relZ, st.x, zDepth - (st.height || 6));
+
       if (st.type === 'boulder') {
         const rw = st.width * 0.5;
         const rh = st.height;
@@ -724,7 +726,7 @@ function renderStructures3D(ctx, ox, oy, s) {
           ctx.restore();
         }
 
-        ctx.fillStyle = isSelected ? '#713f12' : '#475569';
+        ctx.fillStyle = isSelected ? '#713f12' : (hitLive ? '#065f46' : '#475569');
         ctx.beginPath();
         ctx.moveTo(vBaseFL.x, vBaseFL.y);
         ctx.lineTo(vTopFL.x, vTopFL.y);
@@ -733,15 +735,15 @@ function renderStructures3D(ctx, ox, oy, s) {
         ctx.closePath();
         ctx.fill();
 
-        ctx.fillStyle = isSelected ? '#fde047' : '#cbd5e1';
+        ctx.fillStyle = isSelected ? '#fde047' : (hitLive ? '#34d399' : '#cbd5e1');
         ctx.beginPath();
         ctx.moveTo(vTopFL.x, vTopFL.y);
         ctx.lineTo(vTopB.x, vTopB.y);
         ctx.lineTo(vTopFR.x, vTopFR.y);
         ctx.closePath();
         ctx.fill();
-        ctx.strokeStyle = isSelected ? '#eab308' : 'rgba(15, 23, 42, 0.75)';
-        ctx.lineWidth = isSelected ? 2 : 1;
+        ctx.strokeStyle = isSelected ? '#eab308' : (hitLive ? '#10b981' : 'rgba(15, 23, 42, 0.75)');
+        ctx.lineWidth = isSelected ? 2 : (hitLive ? 1.8 : 1);
         ctx.stroke();
 
         hitBoxes3D.push({
@@ -753,7 +755,7 @@ function renderStructures3D(ctx, ox, oy, s) {
         });
 
         if (state.showCorrelationOverlay || isSelected) {
-          drawCorrelationBadge(ctx, vTopB.x, vTopB.y - 12, st.tag || 'E1', st.name || 'Boulder', isSelected ? '#facc15' : '#94a3b8', 'SideVü Echo + Shadow', isSelected);
+          drawCorrelationBadge(ctx, vTopB.x, vTopB.y - 12, st.tag || 'E1', st.name || 'Boulder', isSelected ? '#facc15' : (hitLive ? '#34d399' : '#94a3b8'), hitLive ? 'LiveScope Return' : 'SideVü Echo + Shadow', isSelected);
         }
       } else {
         const rBase = project3D(st.x, zDepth, relZ, ox, oy, s);
@@ -778,14 +780,14 @@ function renderStructures3D(ctx, ox, oy, s) {
           ctx.restore();
         }
 
-        ctx.strokeStyle = isSelected ? '#ea580c' : '#78350f';
+        ctx.strokeStyle = isSelected ? '#ea580c' : (hitLive ? '#047857' : '#78350f');
         ctx.lineWidth = trunkRadius * 3.5;
         ctx.beginPath();
         ctx.moveTo(rBase.x, rBase.y);
         ctx.lineTo(rTop.x, rTop.y);
         ctx.stroke();
 
-        ctx.strokeStyle = isSelected ? '#fbbf24' : '#b45309';
+        ctx.strokeStyle = isSelected ? '#fbbf24' : (hitLive ? '#34d399' : '#b45309');
         ctx.lineWidth = trunkRadius * 1.5;
         ctx.beginPath();
         ctx.moveTo(rBase.x - 4, rBase.y);
@@ -801,7 +803,7 @@ function renderStructures3D(ctx, ox, oy, s) {
         });
 
         if (state.showCorrelationOverlay || isSelected) {
-          drawCorrelationBadge(ctx, rTop.x, rTop.y - 14, st.tag || 'D1', st.name || 'Timber', isSelected ? '#facc15' : '#f59e0b', 'ClearVü Trunk & Limbs', isSelected);
+          drawCorrelationBadge(ctx, rTop.x, rTop.y - 14, st.tag || 'D1', st.name || 'Timber', isSelected ? '#facc15' : (hitLive ? '#34d399' : '#f59e0b'), hitLive ? 'LiveScope Timber Echo' : 'ClearVü Trunk & Limbs', isSelected);
         }
       }
     }
@@ -972,8 +974,10 @@ function renderLure3D(ctx, ox, oy, s) {
   if (!lure || !lure.active) return;
   const state = simState.get();
   const bZ = state.boatZ || 35;
-  const pt = project3D(lure.x, lure.depth, bZ + 6, ox, oy, s);
-  const rod = project3D(0, 0, bZ + 4, ox, oy, s);
+  const bowZ = bZ + state.txOffsetBow;
+  const lureRelZ = lure.z !== undefined ? lure.z : bowZ + 6;
+  const pt = project3D(lure.x, lure.depth, lureRelZ, ox, oy, s);
+  const rod = project3D(0, 0, bowZ + 1, ox, oy, s);
 
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
   ctx.lineWidth = 1;

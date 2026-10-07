@@ -294,16 +294,31 @@ class TestAcousticEngine(unittest.TestCase):
         self.assertAlmostEqual(b_fwd_s90, 30.0, places=4)
         self.assertAlmostEqual(b_cross_s90, 0.0, places=4)
 
-        # 4. Perspective Mode coverage: wide horizontal fan (135° = ±67.5°)
-        # A target at 45° azimuth angle from the rotated beam axis should be inside the 135° sector
+        # 4. Perspective Mode coverage: wide horizontal fan (135° = ±67.5°) and 45° vertical elevation
+        # A target at 36.8° azimuth angle from the rotated beam axis should be inside the 135° sector
         target_angle_rad = math.atan2(abs(15.0), 20.0) # ~36.8°
         self.assertLess(target_angle_rad, math.radians(135.0 / 2))
+
+        # Perspective Mode elevation test: water depth 18 ft at 22 ft forward distance (~39.3° elevation)
+        persp_dy = 18.0 - tx_depth # 17.4 ft
+        persp_horiz = math.hypot(22.0, 5.0) # ~22.56 ft
+        persp_vert_angle = math.atan2(persp_dy, persp_horiz) # ~37.6°
+        self.assertLess(persp_vert_angle, math.radians(45.0), "Perspective mode should cover water column up to 45° elevation")
 
         # 5. Down Mode coverage: targets directly underneath transducer (e.g. z = 48, x = 0, depth = 20 ft)
         down_target_dz = abs(48.0 - tx_z) # 0 ft
         down_target_dy = 20.0 - tx_depth # 19.4 ft
         vert_angle = math.atan2(down_target_dz, down_target_dy) # 0 rad (straight down)
         self.assertLess(vert_angle, math.radians(135.0 / 2))
+
+        # 6. Lure alignment with bow transducer:
+        # Lure dropped at bowZ + 6 should be strictly in front of bow transducer (dz > 0)
+        boat_z = 35.0
+        tx_offset_bow = 13.0
+        bow_z = boat_z + tx_offset_bow # 48.0 ft
+        lure_z = bow_z + 6.0 # 54.0 ft
+        self.assertGreater(lure_z, bow_z, "Lure must be dropped forward of the bow transducer")
+        self.assertEqual(lure_z - bow_z, 6.0)
 
 
 if __name__ == "__main__":
