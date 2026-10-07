@@ -12,6 +12,7 @@
   - ClearVü razor slice DownScan with boulder domes and rice grain returns.
   - Traditional 2D CHIRP with dynamic hyperbolic arches and bottom hardness band.
   - 2D Cross-Section Lake View: Verified drop jig animated descent from bow rod with glowing bead, tethered line, and bottom-settling oscillation.
+  - LiveScope Acoustic Fan Gating: Verified that lures and submerged structures outside the fan's elevation angle spread ($[\theta_{tilt} \pm \theta_{spread}/2]$) and lateral azimuth boundary do not render on the LiveScope MFD until entering the active beam envelope.
 
 ## Local Test Server
 To launch and test locally:

@@ -10,5 +10,6 @@
 - [x] Implement application entrypoint (`src/main.js`, `src/styles/main.css`, `index.html`)
 - [x] Author unit tests in `tests/test_acoustics.py` and verify 100% pass rate
 - [x] Fix drop jig animation and rendering in 2D lake view (`src/renderers/lake2D.js`, `src/main.js`, `index.html`)
+- [x] Enforce acoustic cone math for LiveScope MFD targets (jig and structures) (`src/renderers/liveScope.js`)
 - [x] Verify functionality via automated checks
 - [ ] Automatically commit and push to remote `origin/feature/modular-sonar-architecture`

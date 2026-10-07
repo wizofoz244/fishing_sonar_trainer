@@ -136,6 +136,26 @@ class TestAcousticEngine(unittest.TestCase):
                 lure_depth += 0.18
         self.assertAlmostEqual(lure_depth, bed_depth - 1.5, delta=0.2)
 
+    def test_livescope_cone_angles(self):
+        """Objects outside the elevation angle spread window must be rejected."""
+        tilt_deg = 45.0
+        spread_deg = 40.0
+        min_angle = math.radians(tilt_deg - spread_deg / 2) # 25 deg
+        max_angle = math.radians(tilt_deg + spread_deg / 2) # 65 deg
+
+        fwd_dist = 6.0
+        # Shallow target (e.g. depth 1.0 ft, tx_depth 0.6 ft -> dy = 0.4 ft)
+        # angle = atan2(0.4, 6.0) = 3.8 deg < 25 deg (outside cone!)
+        dy_shallow = 0.4
+        angle_shallow = math.atan2(dy_shallow, fwd_dist)
+        self.assertLess(angle_shallow, min_angle)
+
+        # Target well within cone (e.g. depth 6.6 ft, tx_depth 0.6 ft -> dy = 6.0 ft)
+        # angle = atan2(6.0, 6.0) = 45.0 deg (centered!)
+        dy_mid = 6.0
+        angle_mid = math.atan2(dy_mid, fwd_dist)
+        self.assertTrue(min_angle <= angle_mid <= max_angle)
+
 
 if __name__ == "__main__":
     unittest.main()

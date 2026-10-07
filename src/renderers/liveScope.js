@@ -59,6 +59,12 @@ export function renderLiveScopeMFD(canvas, ctx) {
     const fwdDist = relZ - bowZ;
     if (fwdDist >= 0 && fwdDist <= maxRangeFt && Math.abs(st.x) <= 22) {
       const bD = getDepthAt(st.x, relZ);
+      const topD = Math.max(0.5, bD - (st.height || (st.type === 'tree' ? 11 : 5.5)));
+      // Check if top or bottom of structure intersects the LiveScope beam window
+      const inBeamTop = isTargetInLiveScope(relZ, st.x, topD);
+      const inBeamBase = isTargetInLiveScope(relZ, st.x, bD);
+      if (!inBeamTop && !inBeamBase) return;
+
       const px = originX + fwdDist * scaleX;
       const pyBed = originY + bD * scaleY;
       const isSelected = (state.selectedTargetId === st.id);
@@ -204,32 +210,35 @@ export function renderLiveScopeMFD(canvas, ctx) {
   });
 
   if (lure && lure.active) {
-    const lureFwdDist = 6;
-    const lx = originX + lureFwdDist * scaleX;
-    const ly = originY + lure.depth * scaleY;
+    const lureRelZ = lure.z !== undefined ? lure.z : bowZ + 6;
+    const hit = isTargetInLiveScope(lureRelZ, lure.x || 0, lure.depth);
+    if (hit) {
+      const lx = originX + hit.fwdDist * scaleX;
+      const ly = originY + hit.depth * scaleY;
 
-    ctx.strokeStyle = 'rgba(251, 191, 36, 0.45)';
-    ctx.lineWidth = 1.2;
-    ctx.setLineDash([2, 2]);
-    ctx.beginPath();
-    ctx.moveTo(lx, originY + (lure.depth - 4) * scaleY);
-    ctx.lineTo(lx, ly);
-    ctx.stroke();
-    ctx.setLineDash([]);
+      ctx.strokeStyle = 'rgba(251, 191, 36, 0.45)';
+      ctx.lineWidth = 1.2;
+      ctx.setLineDash([2, 2]);
+      ctx.beginPath();
+      ctx.moveTo(lx, originY + (hit.depth - 4) * scaleY);
+      ctx.lineTo(lx, ly);
+      ctx.stroke();
+      ctx.setLineDash([]);
 
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.arc(lx, ly, 3, 0, Math.PI * 2);
-    ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(lx, ly, 3, 0, Math.PI * 2);
+      ctx.fill();
 
-    ctx.fillStyle = '#fbbf24';
-    ctx.beginPath();
-    ctx.arc(lx, ly, 1.8, 0, Math.PI * 2);
-    ctx.fill();
+      ctx.fillStyle = '#fbbf24';
+      ctx.beginPath();
+      ctx.arc(lx, ly, 1.8, 0, Math.PI * 2);
+      ctx.fill();
 
-    ctx.font = 'bold 7.5px monospace';
-    ctx.fillStyle = '#fbbf24';
-    ctx.fillText('🎣 JIG', lx + 5, ly + 2);
+      ctx.font = 'bold 7.5px monospace';
+      ctx.fillStyle = '#fbbf24';
+      ctx.fillText('🎣 JIG', lx + 5, ly + 2);
+    }
   }
 }
 
