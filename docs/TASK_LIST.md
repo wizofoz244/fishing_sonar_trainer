@@ -14,7 +14,7 @@
 - [x] Enforce physical acoustic beam bounds across all remaining MFDs (2D CHIRP, ClearVü, SideVü) and sample pings for lure (`src/renderers/chirp2D.js`, `src/renderers/clearVu.js`, `src/renderers/sideVu.js`, `src/renderers/sonarSuite.js`) - [Issue #3](https://github.com/wizofoz244/fishing_sonar_trainer/issues/3)
 - [x] Author comprehensive acoustic reach unit tests in `tests/test_acoustics.py` (8/8 passing)
 - [x] Render ClearVü DownScan volumetric acoustic beam wedge through water column in 3D lake view (`src/renderers/lake3D.js`, `tests/test_acoustics.py`) - [Issue #4](https://github.com/wizofoz244/fishing_sonar_trainer/issues/4)
-- [x] Render LiveScope as 3D volumetric phased-array wedge with bottom intersection footprint and clamp beams to never breach water surface in 2D and 3D (`src/renderers/lake3D.js`, `src/renderers/lake2D.js`, `tests/test_acoustics.py`)
+- [x] Render LiveScope as 3D volumetric phased-array wedge with bottom intersection footprint and clamp beams to never breach water surface in 2D and 3D (`src/renderers/lake3D.js`, `src/renderers/lake2D.js`, `tests/test_acoustics.py`) - [Issue #5](https://github.com/wizofoz244/fishing_sonar_trainer/issues/5)
 - [x] Verify functionality via automated checks (9/9 unit tests passing)
-- [ ] Automatically commit and push to remote `origin/feature/modular-sonar-architecture` (pending GitHub server recovery)
+- [x] Automatically commit and push to remote `origin/feature/modular-sonar-architecture`
 
