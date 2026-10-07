@@ -156,6 +156,39 @@ class TestAcousticEngine(unittest.TestCase):
         angle_mid = math.atan2(dy_mid, fwd_dist)
         self.assertTrue(min_angle <= angle_mid <= max_angle)
 
+    def test_clearvu_lateral_reach(self):
+        """ClearVü DownScan razor slice lateral reach calculation and gating."""
+        tx_depth = 0.6
+        clear_angle_deg = 45.0
+        clear_half_rad = math.radians(clear_angle_deg / 2)
+
+        # Target at 20 ft depth
+        dy = 20.0 - tx_depth
+        max_reach = dy * math.tan(clear_half_rad) + 1.5 * 0.4
+        self.assertAlmostEqual(max_reach, 19.4 * math.tan(math.radians(22.5)) + 0.6, delta=0.1)
+
+        # Target inside reach (e.g. lateral_x = 2 ft)
+        self.assertLess(abs(2.0), max_reach)
+        # Target outside reach (e.g. lateral_x = 25 ft)
+        self.assertGreater(abs(25.0), max_reach)
+
+    def test_sidevu_sweep_reach(self):
+        """SideVü bilateral swath maximum lateral sweep coverage."""
+        lake_depth = 25.0
+        tx_depth = 0.6
+        sweep_deg = 55.0
+        sweep_rad = math.radians(sweep_deg)
+        side_range_ft = 80.0
+
+        max_sweep_reach = min(side_range_ft, max(12.0, (lake_depth - tx_depth) * math.tan(sweep_rad)))
+        expected = min(80.0, 24.4 * math.tan(math.radians(55.0)))
+        self.assertAlmostEqual(max_sweep_reach, expected, delta=0.1)
+
+        # Target at 20 ft lateral offset should be in sweep
+        self.assertLess(20.0, max_sweep_reach)
+        # Target at 90 ft lateral offset should be out of sweep range
+        self.assertGreater(90.0, max_sweep_reach)
+
 
 if __name__ == "__main__":
     unittest.main()

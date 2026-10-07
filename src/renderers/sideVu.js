@@ -5,7 +5,7 @@
 
 import { simState } from '../state/simState.js';
 import { getPaletteColor } from '../state/palettes.js';
-import { structures, fishList } from '../physics/targets.js';
+import { structures, fishList, lure } from '../physics/targets.js';
 
 export const hitBoxesSideVu = [];
 
@@ -65,104 +65,138 @@ export function renderSideVuMFD(canvas, ctx, sideHistory, maxHistory, ftPerPing)
 
   const txZ = (state.boatZ || 35) + state.txOffsetTransom;
   const totalHistFt = maxHistory * ftPerPing;
+  const sweepDeg = state.sideSweepDeg || state.sideSweepAngleDeg || 55;
+  const sweepRad = (sweepDeg * Math.PI) / 180;
+  const maxSweepReach = Math.min(state.sideRangeFt, Math.max(12, (state.lakeDepthFt - state.txDepth) * Math.tan(sweepRad)));
 
   fishList.forEach(f => {
-    const elapsedFt = ((state.worldZ + txZ - f.z) % state.lakeLength + state.lakeLength) % state.lakeLength;
-    if (elapsedFt >= 0 && elapsedFt <= totalHistFt) {
-      const screenY = (elapsedFt / totalHistFt) * h;
-      const isSelected = (state.selectedTargetId === f.id);
-      const sideChannelX = f.x < 0
-        ? (state.sideFlipped ? centerX + (Math.abs(f.x) / state.sideRangeFt) * (centerX - 6) : centerX - (Math.abs(f.x) / state.sideRangeFt) * (centerX - 6))
-        : (state.sideFlipped ? centerX - (Math.abs(f.x) / state.sideRangeFt) * (centerX - 6) : centerX + (Math.abs(f.x) / state.sideRangeFt) * (centerX - 6));
+    if (Math.abs(f.x) <= maxSweepReach + 1.5) {
+      const elapsedFt = ((state.worldZ + txZ - f.z) % state.lakeLength + state.lakeLength) % state.lakeLength;
+      if (elapsedFt >= 0 && elapsedFt <= totalHistFt) {
+        const screenY = (elapsedFt / totalHistFt) * h;
+        const isSelected = (state.selectedTargetId === f.id);
+        const sideChannelX = f.x < 0
+          ? (state.sideFlipped ? centerX + (Math.abs(f.x) / state.sideRangeFt) * (centerX - 6) : centerX - (Math.abs(f.x) / state.sideRangeFt) * (centerX - 6))
+          : (state.sideFlipped ? centerX - (Math.abs(f.x) / state.sideRangeFt) * (centerX - 6) : centerX + (Math.abs(f.x) / state.sideRangeFt) * (centerX - 6));
 
-      if (isSelected) {
-        const pulse = Math.sin(now * 0.01) * 3;
-        ctx.save();
-        ctx.strokeStyle = '#facc15';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(sideChannelX - 14 - pulse, screenY - 7, 28 + pulse * 2, 14);
-        ctx.restore();
+        if (isSelected) {
+          const pulse = Math.sin(now * 0.01) * 3;
+          ctx.save();
+          ctx.strokeStyle = '#facc15';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(sideChannelX - 14 - pulse, screenY - 7, 28 + pulse * 2, 14);
+          ctx.restore();
+        }
+
+        if (state.showCorrelationOverlay || isSelected) {
+          ctx.save();
+          ctx.font = 'bold 8px monospace';
+          const label = isSelected
+            ? `[${f.tag}] ★ SELECTED`
+            : (f.x === 0 ? `[${f.tag}] WATER COL` : `[${f.tag}] ECHO+SHADOW`);
+          const boxW = ctx.measureText(label).width + 8;
+          const drawX = Math.min(w - boxW - 2, Math.max(2, sideChannelX - boxW / 2));
+
+          ctx.fillStyle = isSelected ? 'rgba(66, 32, 6, 0.95)' : 'rgba(2, 6, 23, 0.90)';
+          ctx.fillRect(drawX, screenY - 5, boxW, 11);
+          ctx.strokeStyle = isSelected ? '#facc15' : (f.x === 0 ? '#38bdf8' : '#c084fc');
+          ctx.lineWidth = isSelected ? 2 : 1;
+          ctx.strokeRect(drawX, screenY - 5, boxW, 11);
+          ctx.fillStyle = isSelected ? '#fef08a' : (f.x === 0 ? '#38bdf8' : '#c084fc');
+          ctx.fillText(label, drawX + 4, screenY + 3);
+          ctx.restore();
+        }
+
+        hitBoxesSideVu.push({
+          id: f.id,
+          x: sideChannelX - 25,
+          y: screenY - 9,
+          w: 50,
+          h: 18
+        });
       }
-
-      if (state.showCorrelationOverlay || isSelected) {
-        ctx.save();
-        ctx.font = 'bold 8px monospace';
-        const label = isSelected
-          ? `[${f.tag}] ★ SELECTED`
-          : (f.x === 0 ? `[${f.tag}] WATER COL` : `[${f.tag}] ECHO+SHADOW`);
-        const boxW = ctx.measureText(label).width + 8;
-        const drawX = Math.min(w - boxW - 2, Math.max(2, sideChannelX - boxW / 2));
-
-        ctx.fillStyle = isSelected ? 'rgba(66, 32, 6, 0.95)' : 'rgba(2, 6, 23, 0.90)';
-        ctx.fillRect(drawX, screenY - 5, boxW, 11);
-        ctx.strokeStyle = isSelected ? '#facc15' : (f.x === 0 ? '#38bdf8' : '#c084fc');
-        ctx.lineWidth = isSelected ? 2 : 1;
-        ctx.strokeRect(drawX, screenY - 5, boxW, 11);
-        ctx.fillStyle = isSelected ? '#fef08a' : (f.x === 0 ? '#38bdf8' : '#c084fc');
-        ctx.fillText(label, drawX + 4, screenY + 3);
-        ctx.restore();
-      }
-
-      hitBoxesSideVu.push({
-        id: f.id,
-        x: sideChannelX - 25,
-        y: screenY - 9,
-        w: 50,
-        h: 18
-      });
     }
   });
 
-  structures.forEach(st => {
-    const elapsedFt = ((state.worldZ + txZ - st.z) % state.lakeLength + state.lakeLength) % state.lakeLength;
-    if (elapsedFt >= 0 && elapsedFt <= totalHistFt) {
-      const screenY = (elapsedFt / totalHistFt) * h;
-      const isSelected = (state.selectedTargetId === st.id);
-      const isKeel = Math.abs(st.x) <= 6;
-      const sideChannelX = isKeel ? centerX : (st.x < 0
-        ? (state.sideFlipped ? centerX + (Math.abs(st.x) / state.sideRangeFt) * (centerX - 6) : centerX - (Math.abs(st.x) / state.sideRangeFt) * (centerX - 6))
-        : (state.sideFlipped ? centerX - (Math.abs(st.x) / state.sideRangeFt) * (centerX - 6) : centerX + (Math.abs(st.x) / state.sideRangeFt) * (centerX - 6)));
+  if (lure && lure.active) {
+    if (Math.abs(lure.x) <= maxSweepReach + 1.0) {
+      const elapsedFt = ((state.worldZ + txZ - lure.z) % state.lakeLength + state.lakeLength) % state.lakeLength;
+      if (elapsedFt >= 0 && elapsedFt <= totalHistFt) {
+        const screenY = (elapsedFt / totalHistFt) * h;
+        const sideChannelX = centerX;
 
-      if (isSelected) {
-        ctx.save();
-        ctx.strokeStyle = '#facc15';
-        ctx.lineWidth = 2;
-        if (isKeel) {
-          ctx.strokeRect(centerX - 24, screenY - 8, 48, 16);
-        } else {
-          ctx.strokeRect(sideChannelX - 16, screenY - 7, 32, 14);
+        if (state.showCorrelationOverlay) {
+          ctx.save();
+          ctx.font = 'bold 8px monospace';
+          const label = '[LURE] WATER COL';
+          const boxW = ctx.measureText(label).width + 8;
+          const drawX = Math.min(w - boxW - 2, Math.max(2, sideChannelX - boxW / 2));
+
+          ctx.fillStyle = 'rgba(66, 32, 6, 0.95)';
+          ctx.fillRect(drawX, screenY - 5, boxW, 11);
+          ctx.strokeStyle = '#ec4899';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(drawX, screenY - 5, boxW, 11);
+          ctx.fillStyle = '#f472b6';
+          ctx.fillText(label, drawX + 4, screenY + 3);
+          ctx.restore();
         }
-        ctx.restore();
       }
+    }
+  }
 
-      if (state.showCorrelationOverlay || isSelected) {
-        ctx.save();
-        ctx.font = 'bold 8px monospace';
-        const label = isSelected ? `[${st.tag}] ★ SELECTED` : (
-          isKeel
-            ? (st.type === 'boulder' ? `[${st.tag}] KEEL HUMP (PINCH)` : `[${st.tag}] KEEL TIMBER (WATER COL)`)
-            : (st.type === 'boulder' ? `[${st.tag}] BOULDER + SHADOW` : `[${st.tag}] TIMBER + SHADOW`)
-        );
-        const boxW = ctx.measureText(label).width + 8;
-        const drawX = Math.min(w - boxW - 2, Math.max(2, sideChannelX - boxW / 2));
+  structures.forEach(st => {
+    if (Math.abs(st.x) <= maxSweepReach + (st.width || 8) * 0.5) {
+      const elapsedFt = ((state.worldZ + txZ - st.z) % state.lakeLength + state.lakeLength) % state.lakeLength;
+      if (elapsedFt >= 0 && elapsedFt <= totalHistFt) {
+        const screenY = (elapsedFt / totalHistFt) * h;
+        const isSelected = (state.selectedTargetId === st.id);
+        const isKeel = Math.abs(st.x) <= 6;
+        const sideChannelX = isKeel ? centerX : (st.x < 0
+          ? (state.sideFlipped ? centerX + (Math.abs(st.x) / state.sideRangeFt) * (centerX - 6) : centerX - (Math.abs(st.x) / state.sideRangeFt) * (centerX - 6))
+          : (state.sideFlipped ? centerX - (Math.abs(st.x) / state.sideRangeFt) * (centerX - 6) : centerX + (Math.abs(st.x) / state.sideRangeFt) * (centerX - 6)));
 
-        ctx.fillStyle = isSelected ? 'rgba(66, 32, 6, 0.95)' : 'rgba(2, 6, 23, 0.90)';
-        ctx.fillRect(drawX, screenY - 5, boxW, 11);
-        ctx.strokeStyle = isSelected ? '#facc15' : (st.color || '#f59e0b');
-        ctx.lineWidth = isSelected ? 2 : 1;
-        ctx.strokeRect(drawX, screenY - 5, boxW, 11);
-        ctx.fillStyle = isSelected ? '#fef08a' : (st.color || '#f59e0b');
-        ctx.fillText(label, drawX + 4, screenY + 3);
-        ctx.restore();
+        if (isSelected) {
+          ctx.save();
+          ctx.strokeStyle = '#facc15';
+          ctx.lineWidth = 2;
+          if (isKeel) {
+            ctx.strokeRect(centerX - 24, screenY - 8, 48, 16);
+          } else {
+            ctx.strokeRect(sideChannelX - 16, screenY - 7, 32, 14);
+          }
+          ctx.restore();
+        }
+
+        if (state.showCorrelationOverlay || isSelected) {
+          ctx.save();
+          ctx.font = 'bold 8px monospace';
+          const label = isSelected ? `[${st.tag}] ★ SELECTED` : (
+            isKeel
+              ? (st.type === 'boulder' ? `[${st.tag}] KEEL HUMP (PINCH)` : `[${st.tag}] KEEL TIMBER (WATER COL)`)
+              : (st.type === 'boulder' ? `[${st.tag}] BOULDER + SHADOW` : `[${st.tag}] TIMBER + SHADOW`)
+          );
+          const boxW = ctx.measureText(label).width + 8;
+          const drawX = Math.min(w - boxW - 2, Math.max(2, sideChannelX - boxW / 2));
+
+          ctx.fillStyle = isSelected ? 'rgba(66, 32, 6, 0.95)' : 'rgba(2, 6, 23, 0.90)';
+          ctx.fillRect(drawX, screenY - 5, boxW, 11);
+          ctx.strokeStyle = isSelected ? '#facc15' : (st.color || '#f59e0b');
+          ctx.lineWidth = isSelected ? 2 : 1;
+          ctx.strokeRect(drawX, screenY - 5, boxW, 11);
+          ctx.fillStyle = isSelected ? '#fef08a' : (st.color || '#f59e0b');
+          ctx.fillText(label, drawX + 4, screenY + 3);
+          ctx.restore();
+        }
+
+        hitBoxesSideVu.push({
+          id: st.id,
+          x: isKeel ? centerX - 25 : sideChannelX - 25,
+          y: screenY - 9,
+          w: 50,
+          h: 18
+        });
       }
-
-      hitBoxesSideVu.push({
-        id: st.id,
-        x: isKeel ? centerX - 25 : sideChannelX - 25,
-        y: screenY - 9,
-        w: 50,
-        h: 18
-      });
     }
   });
 }

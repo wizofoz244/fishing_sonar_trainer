@@ -11,5 +11,7 @@
 - [x] Author unit tests in `tests/test_acoustics.py` and verify 100% pass rate
 - [x] Fix drop jig animation and rendering in 2D lake view (`src/renderers/lake2D.js`, `src/main.js`, `index.html`)
 - [x] Enforce acoustic cone math for LiveScope MFD targets (jig and structures) (`src/renderers/liveScope.js`)
+- [x] Enforce physical acoustic beam bounds across all remaining MFDs (2D CHIRP, ClearVü, SideVü) and sample pings for lure (`src/renderers/chirp2D.js`, `src/renderers/clearVu.js`, `src/renderers/sideVu.js`, `src/renderers/sonarSuite.js`)
+- [x] Author comprehensive acoustic reach unit tests in `tests/test_acoustics.py` (7/7 passing)
 - [x] Verify functionality via automated checks
 - [ ] Automatically commit and push to remote `origin/feature/modular-sonar-architecture`

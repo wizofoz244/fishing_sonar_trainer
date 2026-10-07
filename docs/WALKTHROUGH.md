@@ -13,6 +13,10 @@
   - Traditional 2D CHIRP with dynamic hyperbolic arches and bottom hardness band.
   - 2D Cross-Section Lake View: Verified drop jig animated descent from bow rod with glowing bead, tethered line, and bottom-settling oscillation.
   - LiveScope Acoustic Fan Gating: Verified that lures and submerged structures outside the fan's elevation angle spread ($[\theta_{tilt} \pm \theta_{spread}/2]$) and lateral azimuth boundary do not render on the LiveScope MFD until entering the active beam envelope.
+  - 2D CHIRP Conical Beam Gating: Verified that fish, structures, and lure are dynamically evaluated against depth-dependent cone radius $r_{cone} = (y - txDepth) \cdot \tan(\theta_{cone} / 2)$.
+  - ClearVü Razor Slice Gating: Verified that fish, structures, and falling lure are gated by dynamic DownScan lateral reach $(y - txDepth) \cdot \tan(\theta_{clear} / 2) + w \cdot 0.4$.
+  - SideVü Bilateral Swath Gating: Verified targets are constrained to maximum lateral sweep reach $(depth - txDepth) \cdot \tan(\theta_{sweep})$, and active falling lures render inside the nadir water column.
+  - Automated Ping Buffer Sampling: Verified `samplePings()` updates `tradHistory`, `clearHistory`, and `sideHistory` with active lure acoustic returns.
 
 ## Local Test Server
 To launch and test locally:

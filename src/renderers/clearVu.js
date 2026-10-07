@@ -5,7 +5,7 @@
 
 import { simState } from '../state/simState.js';
 import { getPaletteColor } from '../state/palettes.js';
-import { structures, fishList } from '../physics/targets.js';
+import { structures, fishList, lure } from '../physics/targets.js';
 
 export const hitBoxesClearVu = [];
 
@@ -48,10 +48,14 @@ export function renderClearVuMFD(canvas, ctx, clearHistory, maxHistory, ftPerPin
   }
 
   const txZ = (state.boatZ || 35) + state.txOffsetTransom;
+  const txDepth = state.txDepth || 0.6;
   const totalHistFt = maxHistory * ftPerPing;
+  const clearHalfAngleRad = (((state.clearAngleDeg || 45) / 2) * Math.PI) / 180;
 
   fishList.forEach(f => {
-    if (Math.abs(f.x) <= 3) {
+    const dy = Math.max(0.2, f.y - txDepth);
+    const lateralReach = dy * Math.tan(clearHalfAngleRad) + 1.5 * 0.4;
+    if (Math.abs(f.x) <= lateralReach) {
       const elapsedFt = ((state.worldZ + txZ - f.z) % state.lakeLength + state.lakeLength) % state.lakeLength;
       if (elapsedFt >= 0 && elapsedFt <= totalHistFt) {
         const screenX = rightX - (elapsedFt / totalHistFt) * w;
@@ -95,8 +99,39 @@ export function renderClearVuMFD(canvas, ctx, clearHistory, maxHistory, ftPerPin
     }
   });
 
+  if (lure && lure.active) {
+    const dy = Math.max(0.2, lure.depth - txDepth);
+    const lateralReach = dy * Math.tan(clearHalfAngleRad) + 1.2 * 0.4;
+    if (Math.abs(lure.x) <= lateralReach) {
+      const elapsedFt = ((state.worldZ + txZ - lure.z) % state.lakeLength + state.lakeLength) % state.lakeLength;
+      if (elapsedFt >= 0 && elapsedFt <= totalHistFt) {
+        const screenX = rightX - (elapsedFt / totalHistFt) * w;
+        const screenY = (lure.depth / 55) * h;
+
+        if (state.showCorrelationOverlay) {
+          ctx.save();
+          ctx.font = 'bold 8px monospace';
+          const label = '[LURE] JIG TRACE';
+          const boxW = ctx.measureText(label).width + 8;
+          const drawX = Math.min(w - boxW - 2, Math.max(2, screenX - boxW / 2));
+
+          ctx.fillStyle = 'rgba(66, 32, 6, 0.95)';
+          ctx.fillRect(drawX, screenY - 12, boxW, 11);
+          ctx.strokeStyle = '#ec4899';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(drawX, screenY - 12, boxW, 11);
+          ctx.fillStyle = '#f472b6';
+          ctx.fillText(label, drawX + 4, screenY - 4);
+          ctx.restore();
+        }
+      }
+    }
+  }
+
   structures.forEach(st => {
-    if (Math.abs(st.x) <= 12) {
+    const dy = Math.max(2, state.lakeDepthFt - txDepth);
+    const maxReach = dy * Math.tan(clearHalfAngleRad) + (st.width || 8) * 0.5;
+    if (Math.abs(st.x) <= maxReach) {
       const elapsedFt = ((state.worldZ + txZ - st.z) % state.lakeLength + state.lakeLength) % state.lakeLength;
       if (elapsedFt >= 0 && elapsedFt <= totalHistFt) {
         const screenX = rightX - (elapsedFt / totalHistFt) * w;

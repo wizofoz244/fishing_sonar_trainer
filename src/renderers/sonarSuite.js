@@ -5,7 +5,7 @@
 
 import { simState } from '../state/simState.js';
 import { isTargetInSideVu, isTargetInClearVu, isTargetIn2DCone } from '../physics/acousticEngine.js';
-import { structures, fishList } from '../physics/targets.js';
+import { structures, fishList, lure } from '../physics/targets.js';
 import { renderLiveScopeMFD } from './liveScope.js';
 import { renderSideVuMFD } from './sideVu.js';
 import { renderClearVuMFD } from './clearVu.js';
@@ -52,6 +52,18 @@ export function samplePings() {
         }
       }
     });
+
+    if (lure && lure.active) {
+      const relZ = ((lure.z - state.worldZ) % state.lakeLength + state.lakeLength) % state.lakeLength;
+      if (isTargetInSideVu(relZ, lure.x, 1.2)) {
+        const slantRange = Math.hypot(lure.x, lure.depth);
+        const bin = Math.floor((slantRange / maxRange) * bins);
+        if (bin > 0 && bin < bins) {
+          portRow[bin] = Math.max(portRow[bin], 0.95 * state.gain);
+          stbdRow[bin] = Math.max(stbdRow[bin], 0.95 * state.gain);
+        }
+      }
+    }
 
     structures.forEach(st => {
       const relZ = ((st.z - state.worldZ) % state.lakeLength + state.lakeLength) % state.lakeLength;
@@ -124,6 +136,17 @@ export function samplePings() {
         }
       }
     });
+
+    if (lure && lure.active) {
+      const relZ = ((lure.z - state.worldZ) % state.lakeLength + state.lakeLength) % state.lakeLength;
+      if (isTargetInClearVu(relZ, lure.x, lure.depth, 1.2)) {
+        const lBin = Math.floor((lure.depth / maxDisplayDepth) * bins);
+        if (lBin >= 0 && lBin < botBin) {
+          slice[lBin] = 0.95 * state.gain;
+          if (lBin + 1 < botBin) slice[lBin + 1] = Math.max(slice[lBin + 1], 0.65 * state.gain);
+        }
+      }
+    }
 
     structures.forEach(st => {
       const relZ = ((st.z - state.worldZ) % state.lakeLength + state.lakeLength) % state.lakeLength;
@@ -212,6 +235,18 @@ export function samplePings() {
         }
       }
     });
+
+    if (lure && lure.active) {
+      const relZ = ((lure.z - state.worldZ) % state.lakeLength + state.lakeLength) % state.lakeLength;
+      const hit = isTargetIn2DCone(relZ, lure.x, lure.depth);
+      if (hit) {
+        const archBin = Math.floor((hit.slantRange / maxDisplayDepth) * bins);
+        if (archBin >= 0 && archBin < botBin) {
+          const signalStrength = Math.max(0.3, (1.0 - Math.pow(hit.distRatio, 1.8) * 0.7)) * state.gain;
+          slice[archBin] = Math.max(slice[archBin], signalStrength);
+        }
+      }
+    }
 
     structures.forEach(st => {
       const relZ = ((st.z - state.worldZ) % state.lakeLength + state.lakeLength) % state.lakeLength;
