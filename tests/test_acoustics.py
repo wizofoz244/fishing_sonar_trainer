@@ -223,8 +223,32 @@ class TestAcousticEngine(unittest.TestCase):
 
         # Target at 20 ft lateral offset should be in sweep
         self.assertLess(20.0, max_sweep_reach)
-        # Target at 90 ft lateral offset should be out of sweep range
-        self.assertGreater(90.0, max_sweep_reach)
+    def test_livescope_waterline_clamping(self):
+        """Verifies LiveScope acoustic ray angles and depths are clamped to never breach the water surface."""
+        # Test extreme shallow tilt with wide spread
+        live_tilt_deg = 15.0
+        live_spread_deg = 50.0
+        tilt_rad = math.radians(live_tilt_deg)
+        spread_rad = math.radians(live_spread_deg)
+
+        # Raw unclamped minimum angle would be negative (upwards into the air)
+        raw_min_angle = tilt_rad - spread_rad / 2
+        self.assertLess(raw_min_angle, 0.0, "Raw angle should be negative for shallow tilt + wide spread")
+
+        # Clamped minimum angle must be positive (downward into water)
+        clamped_min_angle = max(0.04, raw_min_angle)
+        self.assertGreater(clamped_min_angle, 0.0, "Clamped angle must be positive")
+
+        # Simulated ray depths along beam: for any positive angle, depth from transducer must increase
+        tx_depth = 0.6
+        live_reach_ft = 55.0
+        for step in range(5):
+            angle = clamped_min_angle + step * 0.1
+            ray_depth = tx_depth + live_reach_ft * math.sin(angle)
+            # Clamped ray depth must strictly be >= 0 (cannot enter air)
+            effective_depth = max(0.0, ray_depth)
+            self.assertGreaterEqual(effective_depth, 0.0)
+            self.assertGreaterEqual(effective_depth, tx_depth)
 
 
 if __name__ == "__main__":

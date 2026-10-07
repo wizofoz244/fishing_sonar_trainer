@@ -478,9 +478,10 @@ function renderAcousticBeams3D(ctx, ox, oy, s, depth, lakeWidthHalf = 65) {
       const ray = getLiveRayReach(angle, liveReach, bowZ, 0);
       const lateralWidth = Math.sin(halfAzimuthRad) * ray.r;
 
-      // Calculate 3D points for port and starboard boundaries
-      const pPort = project3D(-lateralWidth, ray.depth, bowZ + ray.fwd, ox, oy, s);
-      const pStbd = project3D(lateralWidth, ray.depth, bowZ + ray.fwd, ox, oy, s);
+      // Calculate 3D points for port and starboard boundaries with strict surface clamping (depth >= 0)
+      const clampedDepth = Math.max(0, ray.depth);
+      const pPort = project3D(-lateralWidth, clampedDepth, bowZ + ray.fwd, ox, oy, s);
+      const pStbd = project3D(lateralWidth, clampedDepth, bowZ + ray.fwd, ox, oy, s);
 
       portRays.push({ p: pPort, ray, lateral: -lateralWidth });
       stbdRays.push({ p: pStbd, ray, lateral: lateralWidth });

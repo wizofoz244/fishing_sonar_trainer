@@ -68,9 +68,10 @@ export function render2DWaterPhysics(canvas, ctx) {
       const tiltRad = (state.liveTiltDeg * Math.PI) / 180;
       const spreadRad = (state.liveSpreadDeg * Math.PI) / 180;
       const liveReachFt = 55;
-      const minAngle = tiltRad - spreadRad / 2;
-      const maxAngle = tiltRad + spreadRad / 2;
-      const numArcSteps = 20;
+      // Clamp minimum angle so beam never projects upwards above the horizontal into the air
+      const minAngle = Math.max(0.04, tiltRad - spreadRad / 2);
+      const maxAngle = Math.min(Math.PI / 2 - 0.05, Math.max(minAngle + 0.05, tiltRad + spreadRad / 2));
+      const numArcSteps = 24;
 
       ctx.fillStyle = 'rgba(16, 185, 129, 0.22)';
       ctx.beginPath();
@@ -80,7 +81,9 @@ export function render2DWaterPhysics(canvas, ctx) {
         const a = minAngle + (i / numArcSteps) * (maxAngle - minAngle);
         const ray = getLiveRayReach(a, liveReachFt, bowZ, 0);
         const px = screenBowX + ray.fwd * scaleX;
-        const py = screenBowY + (ray.depth - txDepth) * scaleY;
+        // Strict waterline clamping: ray depth cannot be less than 0 (water surface = airHeight)
+        const effectiveDepth = Math.max(0, ray.depth);
+        const py = Math.max(airHeight, airHeight + (effectiveDepth / maxDisplayDepth) * usableHeight);
         ctx.lineTo(px, py);
       }
       ctx.closePath();
