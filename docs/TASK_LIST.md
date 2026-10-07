@@ -12,6 +12,8 @@
 - [x] Fix drop jig animation and rendering in 2D lake view (`src/renderers/lake2D.js`, `src/main.js`, `index.html`) - [Issue #2](https://github.com/wizofoz244/fishing_sonar_trainer/issues/2)
 - [x] Enforce acoustic cone math for LiveScope MFD targets (jig and structures) (`src/renderers/liveScope.js`) - [Issue #3](https://github.com/wizofoz244/fishing_sonar_trainer/issues/3)
 - [x] Enforce physical acoustic beam bounds across all remaining MFDs (2D CHIRP, ClearVü, SideVü) and sample pings for lure (`src/renderers/chirp2D.js`, `src/renderers/clearVu.js`, `src/renderers/sideVu.js`, `src/renderers/sonarSuite.js`) - [Issue #3](https://github.com/wizofoz244/fishing_sonar_trainer/issues/3)
-- [x] Author comprehensive acoustic reach unit tests in `tests/test_acoustics.py` (7/7 passing)
+- [x] Author comprehensive acoustic reach unit tests in `tests/test_acoustics.py` (8/8 passing)
+- [x] Render ClearVü DownScan volumetric acoustic beam wedge through water column in 3D lake view (`src/renderers/lake3D.js`, `tests/test_acoustics.py`) - [Issue #4](https://github.com/wizofoz244/fishing_sonar_trainer/issues/4)
 - [x] Verify functionality via automated checks
 - [x] Automatically commit and push to remote `origin/feature/modular-sonar-architecture`
+
