@@ -25,4 +25,5 @@
 - [x] Remove personal email address from simulator UI, credits modal, and issue template configuration (`index.html`, `.github/ISSUE_TEMPLATE/config.yml`, `tests/test_acoustics.py`) - [Issue #11](https://github.com/wizofoz244/fishing_sonar_trainer/issues/11)
 - [x] Add user feedback survey and issue reporting form link in header, credits modal, and documentation (`index.html`, `README.md`, `tests/test_acoustics.py`) - [Issue #12](https://github.com/wizofoz244/fishing_sonar_trainer/issues/12)
 - [x] Add direct Google feedback survey form link to top disclaimer notice banner (`index.html`, `tests/test_acoustics.py`) - [Issue #14](https://github.com/wizofoz244/fishing_sonar_trainer/issues/14)
+- [x] Adopt GNU AGPLv3 open-source license with author attribution requirement and network copyleft (`LICENSE`, `index.html`, `README.md`, `tests/test_acoustics.py`) - [Issue #16](https://github.com/wizofoz244/fishing_sonar_trainer/issues/16)
 

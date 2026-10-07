@@ -20,3 +20,9 @@ We welcome feedback from anglers, marine electronics enthusiasts, and acoustics 
 - **[Feedback & Issue Survey Form](https://forms.gle/FGJarxj8KERkqvux5)**: Submit acoustic feedback, bug reports, or feature requests.
 - **[GitHub Issue Tracker](https://github.com/wizofoz244/fishing_sonar_trainer/issues/new/choose)**: Open a tracked GitHub issue using our Bug Report or Feature Request templates.
 
+## License & Attribution
+This project is open-source software licensed under the **[GNU Affero General Public License v3.0 (AGPLv3)](file:///Users/oz/Develop/fishing_sonar_trainer/LICENSE)**:
+- **Copyright (C) 2026 wizofoz244**.
+- **Attribution**: You are free to run, study, and modify this simulator. Any redistribution or derivative work must retain prominent author attribution and original copyright notices.
+- **Network Copyleft**: If you modify and host this simulator on a public web server, you must make your complete source code publicly available under the GNU AGPLv3.
+

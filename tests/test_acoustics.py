@@ -3,6 +3,7 @@ Unit tests for marine acoustic calculations and geometric footprint validation.
 """
 
 import math
+import os
 import unittest
 
 
@@ -408,6 +409,38 @@ class TestUIStructure(unittest.TestCase):
         with open("README.md", "r", encoding="utf-8") as f:
             readme = f.read()
         self.assertIn(feedback_url, readme, "README.md must reference the feedback form link")
+
+    def test_open_source_license_and_attribution(self) -> None:
+        """Verifies presence, attribution terms, and consistency of the GNU AGPLv3 license.
+
+        Returns:
+            None.
+
+        Raises:
+            AssertionError: If license files or modal notices are missing or inconsistent.
+        """
+        # 1. Verify LICENSE file exists and specifies GNU AGPLv3 and copyright holder
+        self.assertTrue(os.path.exists("LICENSE"), "LICENSE file must exist in repository root")
+        with open("LICENSE", "r", encoding="utf-8") as f:
+            license_text = f.read()
+        self.assertIn("GNU AFFERO GENERAL PUBLIC LICENSE", license_text)
+        self.assertIn("Copyright (C) 2026 wizofoz244", license_text)
+        self.assertIn("Remote Network Interaction", license_text)
+
+        # 2. Verify README.md includes License & Attribution section
+        with open("README.md", "r", encoding="utf-8") as f:
+            readme = f.read()
+        self.assertIn("## License & Attribution", readme)
+        self.assertIn("GNU Affero General Public License v3.0 (AGPLv3)", readme)
+        self.assertIn("wizofoz244", readme)
+
+        # 3. Verify HTML Credits modal displays AGPLv3 attribution & network copyleft terms
+        with open("index.html", "r", encoding="utf-8") as f:
+            html = f.read()
+        self.assertIn("Open Source License & Attribution (GNU AGPLv3)", html)
+        self.assertIn("wizofoz244", html)
+        self.assertIn("Network Copyleft", html)
+        self.assertIn("Attribution Requirement", html)
 
 
 if __name__ == "__main__":
