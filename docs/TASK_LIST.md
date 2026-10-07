@@ -17,6 +17,8 @@
 - [x] Render LiveScope as 3D volumetric phased-array wedge with bottom intersection footprint and clamp beams to never breach water surface in 2D and 3D (`src/renderers/lake3D.js`, `src/renderers/lake2D.js`, `tests/test_acoustics.py`) - [Issue #5](https://github.com/wizofoz244/fishing_sonar_trainer/issues/5)
 - [x] Implement LiveScope Forward, Down, and Perspective directional modes with beam azimuth rotation relative to boat travel (`src/state/simState.js`, `src/physics/acousticEngine.js`, `src/renderers/liveScope.js`, `src/renderers/lake3D.js`, `src/renderers/lake2D.js`, `src/ui/angleDrawers.js`, `src/ui/modals.js`, `index.html`, `tests/test_acoustics.py`) - [Issue #6](https://github.com/wizofoz244/fishing_sonar_trainer/issues/6)
 - [x] Verify functionality via automated checks (10/10 unit tests passing)
-- [x] Automatically commit and push to remote `origin/feature/livescope-modes-and-rotation`
+- [x] Align 3D lure with bow transducer and expand perspective elevation coverage (`src/renderers/lake3D.js`, `tests/test_acoustics.py`) - [Issue #7](https://github.com/wizofoz244/fishing_sonar_trainer/issues/7)
+- [x] Render realistic bottom-anchored acoustic boulders and sonar shadows (`src/renderers/liveScope.js`, `src/physics/targets.js`, `tests/test_acoustics.py`) - [Issue #8](https://github.com/wizofoz244/fishing_sonar_trainer/issues/8)
 - [x] Add responsive top disclaimer notice banner with direct GitHub issue submission link (`index.html`, `tests/test_acoustics.py`) - [Issue #9](https://github.com/wizofoz244/fishing_sonar_trainer/issues/9)
+- [x] Merge all feature branches into default branch `main` and close all tracking issues
 
