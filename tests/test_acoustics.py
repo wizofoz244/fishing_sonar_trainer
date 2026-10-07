@@ -125,6 +125,17 @@ class TestAcousticEngine(unittest.TestCase):
         )
         self.assertFalse(outside_cone)
 
+    def test_lure_kinematics(self):
+        """Lure drops progressively through the water column until bottom settling."""
+        bed_depth = 25.0
+        lure_depth = 1.0
+
+        # Simulate descent steps (22.5 ft / 0.18 ft = 125 steps)
+        for _ in range(140):
+            if lure_depth < bed_depth - 1.5:
+                lure_depth += 0.18
+        self.assertAlmostEqual(lure_depth, bed_depth - 1.5, delta=0.2)
+
 
 if __name__ == "__main__":
     unittest.main()

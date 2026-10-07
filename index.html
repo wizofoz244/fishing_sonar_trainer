@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Garmin GPSMAP® Multi-Sonar & 3D Lake Simulator</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="./src/styles/main.css?v=2" />
+  <link rel="stylesheet" href="./src/styles/main.css?v=3" />
 </head>
 <body class="h-screen w-screen flex flex-col bg-slate-950 text-slate-100 overflow-hidden">
 
@@ -368,7 +368,7 @@
     </div>
     <div class="pt-1 flex items-center justify-between border-t border-slate-800">
       <button id="btn-auto-spawn" class="px-2.5 py-1 rounded-lg bg-slate-950 border border-cyan-800 text-cyan-300 font-bold">⚡ Auto-Spawn [OFF]</button>
-      <button onclick="window.dropFishingJig && window.dropFishingJig()" class="px-2.5 py-1 rounded-lg bg-emerald-600 text-slate-950 font-bold">🎣 Drop Jig</button>
+      <button id="btn-drawer-drop-jig" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold transition-all shadow">🎣 Drop Jig</button>
     </div>
   </div>
 
@@ -529,6 +529,6 @@
     </div>
   </div>
 
-  <script type="module" src="./src/main.js?v=2"></script>
+  <script type="module" src="./src/main.js?v=3"></script>
 </body>
 </html>

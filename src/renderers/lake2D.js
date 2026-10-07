@@ -5,7 +5,7 @@
 
 import { simState } from '../state/simState.js';
 import { getDepthAt, getLiveRayReach } from '../physics/acousticEngine.js';
-import { structures, fishList } from '../physics/targets.js';
+import { structures, fishList, lure } from '../physics/targets.js';
 import { drawCorrelationBadge } from './lake3D.js';
 
 export const hitBoxes2D = [];
@@ -298,6 +298,59 @@ export function render2DWaterPhysics(canvas, ctx) {
       }
     }
   });
+
+  renderLure2D(ctx, boatX, airHeight, usableHeight, maxDisplayDepth, scaleX, scaleY);
+}
+
+function renderLure2D(ctx, boatX, airHeight, usableHeight, maxDisplayDepth, scaleX, scaleY) {
+  if (!lure || !lure.active) return;
+  const state = simState.get();
+  const bZ = state.boatZ || 35;
+  const bowZ = bZ + state.txOffsetBow;
+  const lureRelZ = lure.z !== undefined ? lure.z : bowZ + 6;
+  const distZ = lureRelZ - bZ;
+
+  const lureX = boatX + distZ * scaleX;
+  const rodTipX = boatX + (state.txOffsetBow - 2) * scaleX;
+  const rodTipY = airHeight - 12;
+
+  const lureY = airHeight + Math.min(usableHeight * 0.96, (lure.depth / maxDisplayDepth) * usableHeight);
+
+  // Monofilament / Braid line
+  ctx.save();
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([3, 2]);
+  ctx.beginPath();
+  ctx.moveTo(rodTipX, rodTipY);
+  ctx.lineTo(lureX, lureY);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Fishing Jig Bead & Halo
+  const haloGrad = ctx.createRadialGradient(lureX, lureY, 1, lureX, lureY, 10);
+  haloGrad.addColorStop(0, 'rgba(251, 191, 36, 0.6)');
+  haloGrad.addColorStop(1, 'rgba(251, 191, 36, 0.0)');
+  ctx.fillStyle = haloGrad;
+  ctx.beginPath();
+  ctx.arc(lureX, lureY, 8, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(lureX, lureY, 3.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#fbbf24';
+  ctx.beginPath();
+  ctx.arc(lureX, lureY, 2.2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Label tag
+  ctx.font = 'bold 8px monospace';
+  ctx.fillStyle = '#fbbf24';
+  ctx.fillText('🎣 JIG', lureX + 6, lureY + 3);
+  ctx.restore();
 }
 
 function renderBoat2D(ctx, boatX, waterY, scaleX, scaleY, transomX, transomY, bowX, bowY) {

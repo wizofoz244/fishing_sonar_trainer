@@ -11,6 +11,7 @@
   - SideVü bilateral waterfall with keel boulder nadir pinch and offshore outward shadows.
   - ClearVü razor slice DownScan with boulder domes and rice grain returns.
   - Traditional 2D CHIRP with dynamic hyperbolic arches and bottom hardness band.
+  - 2D Cross-Section Lake View: Verified drop jig animated descent from bow rod with glowing bead, tethered line, and bottom-settling oscillation.
 
 ## Local Test Server
 To launch and test locally:

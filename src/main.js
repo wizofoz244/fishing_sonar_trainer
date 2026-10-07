@@ -5,7 +5,7 @@
 
 import { simState } from './state/simState.js';
 import { getDepthAt } from './physics/acousticEngine.js';
-import { structures, fishList, updateKinematics } from './physics/targets.js';
+import { structures, fishList, updateKinematics, dropFishingJig } from './physics/targets.js';
 import { render3DLake, hitBoxes3D, unproject3D } from './renderers/lake3D.js';
 import { render2DWaterPhysics, hitBoxes2D } from './renderers/lake2D.js';
 import { renderSonarSuite, samplePings, seedAcousticHistory } from './renderers/sonarSuite.js';
@@ -279,6 +279,14 @@ function initNavigationAndModes() {
     const btn = document.getElementById(`btn-spawn-${type}`);
     if (btn) btn.addEventListener('click', () => spawnPresetTarget(type));
   });
+
+  const btnDrawerDropJig = document.getElementById('btn-drawer-drop-jig');
+  if (btnDrawerDropJig) {
+    btnDrawerDropJig.addEventListener('click', () => dropFishingJig());
+  }
+
+  // Global window fallback
+  window.dropFishingJig = dropFishingJig;
 
   // Tips drawer open buttons on MFD bezels
   ['live', 'side', 'clear', 'trad'].forEach(tab => {

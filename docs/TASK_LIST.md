@@ -9,5 +9,6 @@
 - [x] Implement UI components (`src/ui/telemetryHud.js`, `src/ui/helmDock.js`, `src/ui/angleDrawers.js`, `src/ui/targetTray.js`, `src/ui/modals.js`)
 - [x] Implement application entrypoint (`src/main.js`, `src/styles/main.css`, `index.html`)
 - [x] Author unit tests in `tests/test_acoustics.py` and verify 100% pass rate
+- [x] Fix drop jig animation and rendering in 2D lake view (`src/renderers/lake2D.js`, `src/main.js`, `index.html`)
 - [x] Verify functionality via automated checks
 - [ ] Automatically commit and push to remote `origin/feature/modular-sonar-architecture`
