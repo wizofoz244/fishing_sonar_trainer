@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full overflow-hidden">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Garmin GPSMAP® Multi-Sonar & 3D Lake Simulator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="./src/styles/main.css?v=2" />
+</head>
+<body class="h-screen w-screen flex flex-col bg-slate-950 text-slate-100 overflow-hidden">
+
+  <!-- TOP HELM HEADER -->
+  <header class="h-11 min-h-[44px] border-b border-slate-800/90 bg-slate-900/95 backdrop-blur px-2.5 sm:px-4 flex items-center justify-between gap-2 z-40 select-none flex-shrink-0">
+    <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+      <div class="flex items-center gap-1.5 flex-shrink-0">
+        <div class="h-6 w-6 rounded-md bg-sky-500/20 border border-sky-400/40 flex items-center justify-center text-sky-400 shadow-[0_0_10px_rgba(56,189,248,0.3)]">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+        </div>
+        <span class="text-xs sm:text-sm font-bold font-hud tracking-wider text-white flex items-center gap-1">
+          GARMIN <span class="text-amber-400 text-[10px] px-1 py-0.2 rounded bg-amber-950/80 border border-amber-800/80 hidden sm:inline">GPSMAP® 8616xsv</span>
+        </span>
+      </div>
+
+      <!-- Live Telemetry Readouts -->
+      <div class="flex items-center gap-1.5 sm:gap-2.5 bg-slate-950/90 px-2 py-0.5 rounded-lg border border-slate-800 text-[10px] sm:text-xs font-hud flex-shrink-0">
+        <div>
+          <span class="text-[8px] text-slate-500 block leading-none">DEPTH</span>
+          <span id="telemetry-depth" class="text-amber-400 font-bold leading-tight">25.0<span class="text-[8px]">FT</span></span>
+        </div>
+        <div class="h-4 w-[1px] bg-slate-800"></div>
+        <div>
+          <span class="text-[8px] text-slate-500 block leading-none">SOG</span>
+          <span id="telemetry-sog" class="text-white font-bold leading-tight">3.6<span class="text-[8px]">MPH</span></span>
+        </div>
+        <div class="h-4 w-[1px] bg-slate-800"></div>
+        <div class="hidden sm:block">
+          <span class="text-[8px] text-slate-500 block leading-none">TEMP</span>
+          <span class="text-emerald-400 font-bold leading-tight">68.4<span class="text-[8px]">°F</span></span>
+        </div>
+        <div class="h-4 w-[1px] bg-slate-800 hidden sm:block"></div>
+        <div>
+          <span class="text-[8px] text-slate-500 block leading-none">RANGE</span>
+          <span id="telemetry-range" class="text-purple-400 font-bold leading-tight">60<span class="text-[8px]">FT</span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions and Mode Controls -->
+    <div class="flex items-center gap-1.5 sm:gap-2 text-xs font-hud flex-shrink-0">
+      <div class="flex items-center bg-slate-950 p-0.5 rounded-lg border border-slate-800 text-[10px]">
+        <button id="btn-layout-split-quad" class="px-2 py-1 rounded bg-sky-600 text-white font-bold transition-all" title="Lake + 4 Sonars Split">
+          <span class="hidden md:inline">Combo </span>50/50
+        </button>
+        <button id="btn-layout-split-dual" class="px-2 py-1 rounded text-slate-400 hover:text-white transition-all ml-0.5" title="Lake + Single Sonar Split">
+          Dual
+        </button>
+        <button id="btn-layout-lake-full" class="px-2 py-1 rounded text-slate-400 hover:text-white transition-all ml-0.5" title="Lake Only (Maximized)">
+          Lake
+        </button>
+        <button id="btn-layout-mfd-quad" class="px-2 py-1 rounded text-slate-400 hover:text-white transition-all ml-0.5" title="Quad Sonar Only">
+          Quad
+        </button>
+      </div>
+
+      <!-- CORRELATE TOGGLE BUTTON -->
+      <button id="btn-toggle-correlate" class="px-2 sm:px-2.5 py-1 rounded-lg bg-cyan-950 hover:bg-cyan-900 text-cyan-300 border border-cyan-600 font-bold text-[11px] flex items-center gap-1 shadow-sm transition-all" title="Toggle Sonar Shape Correlation Overlay">
+        <span id="lbl-correlate-btn">🎯 Correlate: ON</span>
+      </button>
+
+      <!-- INTRO GUIDE MODAL BUTTON -->
+      <button id="btn-toggle-guide" class="px-2 sm:px-2.5 py-1 rounded-lg bg-sky-900/90 hover:bg-sky-800 text-sky-200 border border-sky-600 font-bold text-[11px] flex items-center gap-1 shadow-sm transition-all" title="Simulator User Guide & Quick Tour">
+        <span>📖 Guide</span>
+      </button>
+
+      <button id="btn-toggle-tips" class="px-2 sm:px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-700/60 font-semibold text-[11px] flex items-center gap-1">
+        <span>💡 Tips</span>
+      </button>
+
+      <button id="btn-toggle-angles" class="px-2 sm:px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold text-[11px] flex items-center gap-1">
+        <span>📡 Angles</span>
+      </button>
+
+      <button id="btn-toggle-targets" class="px-2 sm:px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-800/60 font-semibold text-[11px] flex items-center gap-1">
+        <span>🐟 Targets</span>
+      </button>
+
+      <button id="btn-toggle-lakebed" class="px-2 sm:px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-800/60 font-semibold text-[11px] flex items-center gap-1">
+        <span>⛰️ Lakebed</span>
+      </button>
+
+      <button id="btn-toggle-credits" class="px-2 sm:px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 font-semibold text-[11px] flex items-center gap-1" title="Garmin Trademarks & Credits">
+        <span>⚖ Credits</span>
+      </button>
+
+      <button id="btn-pause" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 font-semibold text-[11px]">
+        <span id="txt-pause">⏸</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN HELM DISPLAY -->
+  <main class="flex-1 w-full min-h-0 relative p-1.5 sm:p-2 overflow-hidden flex flex-col">
+    <div id="helm-display-container" class="flex-1 w-full h-full min-h-0 grid grid-cols-1 lg:grid-cols-2 gap-1.5 overflow-hidden transition-all duration-200">
+      
+      <!-- PANE A: Lake View (3D or 2D) -->
+      <div id="pane-container-lake" class="relative flex flex-col bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-lg min-h-0">
+        <div class="h-7 px-2 bg-slate-950/95 border-b border-slate-800/90 flex items-center justify-between z-20 font-hud text-[10px] flex-shrink-0">
+          <div class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+            <select id="sel-source-lake" class="bg-slate-900 text-cyan-300 font-bold border border-slate-700 rounded px-1.5 py-0.5 text-[10px] cursor-pointer outline-none">
+              <option value="3d">3D Cutaway Lake (Isometric)</option>
+              <option value="2d">2D Acoustic Physics (Underwater Slice)</option>
+            </select>
+          </div>
+
+          <div class="flex items-center gap-1">
+            <div id="lake-cam-group" class="flex items-center bg-slate-900 p-0.5 rounded border border-slate-800 text-[9px]">
+              <button id="cam-quarter" class="px-1.5 py-0.5 rounded bg-sky-600 text-white font-bold">Quarter</button>
+              <button id="cam-steep" class="px-1.5 py-0.5 rounded text-slate-400 hover:text-white ml-0.5">Steep</button>
+              <button id="cam-low" class="px-1.5 py-0.5 rounded text-slate-400 hover:text-white ml-0.5">Stern</button>
+            </div>
+            <button id="btn-quick-illustrations" class="px-1.5 py-0.5 rounded bg-cyan-700 hover:bg-cyan-600 text-white font-bold text-[9px] ml-1">Beams: ON</button>
+            <button id="btn-max-lake" class="px-1 py-0.5 text-slate-400 hover:text-white" title="Maximize">⛶</button>
+          </div>
+        </div>
+
+        <div class="relative flex-1 w-full h-full min-h-0 overflow-hidden bg-slate-950">
+          <canvas id="canvas-3d-lake" class="absolute inset-0 w-full h-full block cursor-crosshair"></canvas>
+          <canvas id="canvas-2d-water" class="absolute inset-0 w-full h-full hidden cursor-crosshair"></canvas>
+
+          <div id="legend-3d-box" class="absolute top-1.5 left-2 pointer-events-none bg-slate-950/85 backdrop-blur px-2 py-1 rounded-lg border border-slate-800 text-[9px] font-hud text-slate-300 space-y-0.5 z-10 hidden sm:block">
+            <div class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span><span>SideVü Fans</span></div>
+            <div class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span><span>ClearVü Slice</span></div>
+            <div class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span><span>2D CHIRP Cone</span></div>
+            <div class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span><span>LiveScope Wedge</span></div>
+          </div>
+
+          <!-- Draggable Target Tray inside Lake View -->
+          <div id="lake-drag-dock" class="absolute bottom-1.5 left-2 z-20 flex items-center gap-1 bg-slate-950/90 backdrop-blur px-2 py-1 rounded-lg border border-slate-800/90 shadow-lg text-[9px] font-hud overflow-x-auto no-scrollbar max-w-[calc(100%-120px)] sm:max-w-none">
+            <span class="text-slate-400 font-bold uppercase tracking-wider text-[8px] mr-0.5 hidden xs:inline flex-shrink-0">DRAG:</span>
+            <div class="drag-source px-1.5 py-0.5 rounded bg-sky-950/80 hover:bg-sky-900 border border-sky-700/60 text-sky-300 cursor-grab active:cursor-grabbing font-bold flex-shrink-0 transition-transform hover:scale-105" data-target-type="bass" title="Drag to place Keel Bass">🐟 Bass</div>
+            <div class="drag-source px-1.5 py-0.5 rounded bg-purple-950/80 hover:bg-purple-900 border border-purple-700/60 text-purple-300 cursor-grab active:cursor-grabbing font-bold flex-shrink-0 transition-transform hover:scale-105" data-target-type="port-bass" title="Drag to place Port Bass">◄ Port</div>
+            <div class="drag-source px-1.5 py-0.5 rounded bg-purple-950/80 hover:bg-purple-900 border border-purple-700/60 text-purple-300 cursor-grab active:cursor-grabbing font-bold flex-shrink-0 transition-transform hover:scale-105" data-target-type="stbd-bass" title="Drag to place Starboard Bass">Stbd ►</div>
+            <div class="drag-source px-1.5 py-0.5 rounded bg-amber-950/80 hover:bg-amber-900 border border-amber-700/60 text-amber-300 cursor-grab active:cursor-grabbing font-bold flex-shrink-0 transition-transform hover:scale-105" data-target-type="timber" title="Drag to place Standing Timber">🪵 Timber</div>
+            <div class="drag-source px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 cursor-grab active:cursor-grabbing font-bold flex-shrink-0 transition-transform hover:scale-105" data-target-type="boulder" title="Drag to place Boulder">🪨 Rock</div>
+            <div class="drag-source px-1.5 py-0.5 rounded bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-700/60 text-emerald-300 cursor-grab active:cursor-grabbing font-bold flex-shrink-0 transition-transform hover:scale-105" data-target-type="jig" title="Drag to drop Jig">🎣 Jig</div>
+          </div>
+
+          <div class="absolute bottom-1 right-2 pointer-events-none bg-black/75 px-1.5 py-0.5 rounded text-[8px] font-hud text-slate-400 border border-slate-800 z-10">
+            Tap lake to spawn fish
+          </div>
+        </div>
+      </div>
+
+      <!-- PANE B: MFD Suite (4 Panes) -->
+      <div id="pane-container-mfd" class="relative flex flex-col min-h-0 overflow-hidden">
+        <div id="mfd-subgrid" class="flex-1 w-full h-full min-h-0 grid grid-cols-1 sm:grid-cols-2 gap-1.5 overflow-hidden">
+          
+          <!-- MFD 1: LiveScope -->
+          <div id="card-mfd-live" class="relative flex flex-col bg-slate-900 border border-slate-800 rounded-xl overflow-hidden mfd-bezel min-h-0">
+            <div class="h-6 px-2 bg-slate-950/90 border-b border-slate-800/90 flex items-center justify-between font-hud text-[9px] z-20 flex-shrink-0">
+              <div class="flex items-center gap-1.5">
+                <span id="dot-live" class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                <span class="font-bold text-emerald-400 uppercase tracking-wide">PANOPTIX LIVESCOPE™</span>
+              </div>
+              <div class="flex items-center gap-1">
+                <button id="btn-tip-live" class="px-1 py-0.2 rounded bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold text-[8px]" title="How to Read LiveScope">? TIPS</button>
+                <button id="mfd-btn-live" class="px-1.5 py-0.2 rounded bg-emerald-700 text-white font-bold text-[8px]">PWR: ON</button>
+                <button id="btn-max-live" class="text-slate-400 hover:text-white px-0.5" title="Maximize">⛶</button>
+              </div>
+            </div>
+            <div class="relative flex-1 w-full h-full min-h-0 overflow-hidden bg-black sonar-scanlines">
+              <canvas id="canvas-mfd-live" class="absolute inset-0 w-full h-full block"></canvas>
+              <div class="absolute top-1 left-2 pointer-events-none font-hud text-[9px] text-yellow-300 font-bold z-20">
+                <span id="hud-live-depth">25.0FT</span> &bull; <span class="text-emerald-400">20 FPS LIVE</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- MFD 2: SideVü -->
+          <div id="card-mfd-side" class="relative flex flex-col bg-slate-900 border border-slate-800 rounded-xl overflow-hidden mfd-bezel min-h-0">
+            <div class="h-6 px-2 bg-slate-950/90 border-b border-slate-800/90 flex items-center justify-between font-hud text-[9px] z-20 flex-shrink-0">
+              <div class="flex items-center gap-1.5">
+                <span id="dot-side" class="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
+                <span class="font-bold text-purple-400 uppercase tracking-wide">SIDEVÜ™ UHD</span>
+              </div>
+              <div class="flex items-center gap-1">
+                <button id="btn-tip-side" class="px-1 py-0.2 rounded bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold text-[8px]" title="How to Read SideVü">? TIPS</button>
+                <button id="btn-side-flip" class="px-1.5 py-0.2 rounded bg-slate-800 hover:bg-slate-700 text-purple-300 font-bold text-[8px] border border-purple-800/50" title="Swap Port and Starboard Channels">⇄ SWAP L/R</button>
+                <button id="mfd-btn-side" class="px-1.5 py-0.2 rounded bg-purple-700 text-white font-bold text-[8px]">PWR: ON</button>
+                <button id="btn-max-side" class="text-slate-400 hover:text-white px-0.5" title="Maximize">⛶</button>
+              </div>
+            </div>
+            <div class="relative flex-1 w-full h-full min-h-0 overflow-hidden bg-black sonar-scanlines">
+              <canvas id="canvas-mfd-side" class="absolute inset-0 w-full h-full block"></canvas>
+              <div class="absolute top-1 inset-x-2 pointer-events-none font-hud text-[8px] text-purple-300 font-bold z-20 flex justify-between">
+                <span id="lbl-side-left">◄ PORT 60'</span>
+                <span id="lbl-side-right">STBD 60' ►</span>
+              </div>
+              <div class="absolute top-1 left-1/2 -translate-x-1/2 pointer-events-none font-hud text-[8px] text-red-500 font-bold bg-black/70 px-1 rounded z-20">
+                KEEL
+              </div>
+            </div>
+          </div>
+
+          <!-- MFD 3: ClearVü -->
+          <div id="card-mfd-clear" class="relative flex flex-col bg-slate-900 border border-slate-800 rounded-xl overflow-hidden mfd-bezel min-h-0">
+            <div class="h-6 px-2 bg-slate-950/90 border-b border-slate-800/90 flex items-center justify-between font-hud text-[9px] z-20 flex-shrink-0">
+              <div class="flex items-center gap-1.5">
+                <span id="dot-clear" class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                <span class="font-bold text-amber-400 uppercase tracking-wide">CLEARVÜ™ DOWNSCAN</span>
+              </div>
+              <div class="flex items-center gap-1">
+                <button id="btn-tip-clear" class="px-1 py-0.2 rounded bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold text-[8px]" title="How to Read ClearVü">? TIPS</button>
+                <button id="mfd-btn-clear" class="px-1.5 py-0.2 rounded bg-amber-700 text-white font-bold text-[8px]">PWR: ON</button>
+                <button id="btn-max-clear" class="text-slate-400 hover:text-white px-0.5" title="Maximize">⛶</button>
+              </div>
+            </div>
+            <div class="relative flex-1 w-full h-full min-h-0 overflow-hidden bg-black sonar-scanlines">
+              <canvas id="canvas-mfd-clear" class="absolute inset-0 w-full h-full block"></canvas>
+              <div class="absolute top-1 left-2 pointer-events-none font-hud text-[9px] text-amber-300 font-bold z-20">
+                <span id="hud-clear-depth">25.0FT</span> &bull; <span class="text-amber-400">RAZOR SLICE</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- MFD 4: 2D CHIRP -->
+          <div id="card-mfd-trad" class="relative flex flex-col bg-slate-900 border border-slate-800 rounded-xl overflow-hidden mfd-bezel min-h-0">
+            <div class="h-6 px-2 bg-slate-950/90 border-b border-slate-800/90 flex items-center justify-between font-hud text-[9px] z-20 flex-shrink-0">
+              <div class="flex items-center gap-1.5">
+                <span id="dot-2d" class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
+                <span class="font-bold text-sky-400 uppercase tracking-wide">TRADITIONAL 2D CHIRP</span>
+              </div>
+              <div class="flex items-center gap-1">
+                <button id="btn-tip-trad" class="px-1 py-0.2 rounded bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold text-[8px]" title="How to Read 2D CHIRP">? TIPS</button>
+                <button id="mfd-btn-2d" class="px-1.5 py-0.2 rounded bg-sky-700 text-white font-bold text-[8px]">PWR: ON</button>
+                <button id="btn-max-trad" class="text-slate-400 hover:text-white px-0.5" title="Maximize">⛶</button>
+              </div>
+            </div>
+            <div class="relative flex-1 w-full h-full min-h-0 overflow-hidden bg-black sonar-scanlines">
+              <canvas id="canvas-mfd-trad" class="absolute inset-0 w-full h-full block"></canvas>
+              <div class="absolute top-1 left-2 pointer-events-none font-hud text-[9px] text-sky-300 font-bold z-20">
+                <span id="hud-trad-depth">25.0FT</span> &bull; <span class="text-sky-400">ARCHES &bull; 24°</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- DOCKED BOTTOM HELM CONTROLS -->
+    <div class="flex flex-col gap-1 mt-1 flex-shrink-0 text-xs font-hud">
+      <div class="h-9 min-h-[36px] bg-slate-900/95 border border-slate-800/90 rounded-xl px-3 flex items-center justify-between gap-3 shadow-lg">
+        <div class="flex items-center gap-3 overflow-x-auto no-scrollbar">
+          <div class="flex items-center gap-1.5 flex-shrink-0">
+            <span class="text-slate-400 text-[10px]">Speed:</span>
+            <input id="slider-speed" type="range" min="0" max="6.5" step="0.2" value="3.6" class="w-16 sm:w-20 accent-sky-400 bg-slate-800 h-1 rounded cursor-pointer">
+            <span id="lbl-speed-dock" class="text-sky-400 font-bold text-[10px]">3.6 MPH</span>
+          </div>
+
+          <div class="flex items-center gap-1.5 flex-shrink-0">
+            <span class="text-slate-400 text-[10px]">Depth:</span>
+            <input id="slider-depth" type="range" min="10" max="65" step="1" value="25" class="w-16 sm:w-20 accent-amber-400 bg-slate-800 h-1 rounded cursor-pointer">
+            <span id="lbl-depth-dock" class="text-amber-400 font-bold text-[10px]">25.0 FT</span>
+          </div>
+
+          <div class="flex items-center gap-1.5 flex-shrink-0 hidden md:flex">
+            <span class="text-slate-400 text-[10px]">Gain:</span>
+            <input id="slider-gain" type="range" min="30" max="100" step="1" value="78" class="w-16 accent-emerald-400 bg-slate-800 h-1 rounded cursor-pointer">
+            <span id="lbl-gain-dock" class="text-emerald-400 font-bold text-[10px]">78%</span>
+          </div>
+
+          <div class="flex items-center gap-1.5 flex-shrink-0">
+            <button id="btn-dock-correlate" class="px-2 py-0.5 rounded bg-cyan-950 border border-cyan-700 text-cyan-300 font-bold text-[10px]">
+              🎯 Acoustic Shape Overlay: ON
+            </button>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-1.5 flex-shrink-0">
+          <button id="btn-drop-jig" class="px-2 py-0.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold text-[10px] transition-all whitespace-nowrap shadow">
+            🎣 Drop Jig
+          </button>
+          <button id="btn-spawn-keel-bass" class="px-2 py-0.5 rounded-lg bg-sky-900 hover:bg-sky-800 text-sky-200 border border-sky-700 font-bold text-[10px] transition-all whitespace-nowrap">
+            + Keel Bass
+          </button>
+        </div>
+      </div>
+
+      <!-- Line 2: Dedicated Highlighted Target Row -->
+      <div id="selection-indicator-dock" class="h-7 min-h-[28px] px-3 rounded-lg bg-amber-950/90 border border-amber-600/70 text-amber-300 text-[11px] font-bold flex items-center justify-between shadow-sm">
+        <div class="flex items-center gap-2 min-w-0">
+          <span class="flex-shrink-0">🎯</span>
+          <span id="txt-selected-chip" class="truncate">Click any fish, boulder, or timber badge to lock and highlight across screens</span>
+        </div>
+        <button id="btn-clear-selection" class="hidden px-2 py-0.5 rounded bg-amber-800 hover:bg-amber-700 text-white font-bold text-[10px] flex-shrink-0 transition-colors ml-2" title="Clear selection">✕ Clear Selection</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- DRAWER: Angles -->
+  <div id="drawer-angles" class="hidden absolute top-12 right-2 sm:right-4 z-50 w-80 sm:w-96 bg-slate-900 border border-slate-700 rounded-2xl p-3.5 drawer-panel font-hud text-xs space-y-3">
+    <div class="flex items-center justify-between border-b border-slate-800 pb-1.5">
+      <span class="font-bold text-sky-400">📡 Sonar Beam Angles & Geometry</span>
+      <button onclick="document.getElementById('drawer-angles').classList.add('hidden')" class="text-slate-400 hover:text-white font-bold px-1">&times;</button>
+    </div>
+
+    <div class="bg-slate-950 p-2 rounded-xl border border-sky-900/50">
+      <div class="flex justify-between text-[11px] mb-1">
+        <span class="text-sky-300 font-semibold">2D CHIRP Cone Angle</span>
+        <span id="val-trad-angle" class="text-white font-bold">24° (CHIRP)</span>
+      </div>
+      <input id="input-trad-angle" type="range" min="8" max="30" step="1" value="24" class="w-full accent-sky-400 bg-slate-800 rounded h-1 cursor-pointer">
+    </div>
+
+    <div class="bg-slate-950 p-2 rounded-xl border border-purple-900/50 space-y-1.5">
+      <div class="flex justify-between text-[11px]">
+        <span class="text-purple-300 font-semibold">SideVü Sweep Angle</span>
+        <span id="val-side-sweep" class="text-white font-bold">55°</span>
+      </div>
+      <input id="input-side-sweep" type="range" min="30" max="75" step="1" value="55" class="w-full accent-purple-400 bg-slate-800 rounded h-1 cursor-pointer">
+      <div class="flex justify-between text-[10px]">
+        <span class="text-slate-400">Fore-Aft Slice Thickness</span>
+        <span id="val-side-thick" class="text-white font-bold">1.2°</span>
+      </div>
+      <input id="input-side-thick" type="range" min="0.5" max="3.0" step="0.1" value="1.2" class="w-full accent-purple-400 bg-slate-800 rounded h-1 cursor-pointer">
+    </div>
+
+    <div class="bg-slate-950 p-2 rounded-xl border border-emerald-900/50 space-y-1.5">
+      <div class="flex justify-between text-[11px]">
+        <span class="text-emerald-300 font-semibold">LiveScope Tilt Angle</span>
+        <span id="val-live-tilt-num" class="text-white font-bold">45°</span>
+      </div>
+      <input id="input-live-tilt" type="range" min="20" max="90" step="5" value="45" class="w-full accent-emerald-400 bg-slate-800 rounded h-1 cursor-pointer">
+      <div class="flex justify-between text-[10px]">
+        <span class="text-slate-400">Beam Spread Width</span>
+        <span id="val-live-spread-num" class="text-white font-bold">40°</span>
+      </div>
+      <input id="input-live-spread" type="range" min="20" max="135" step="5" value="40" class="w-full accent-emerald-400 bg-slate-800 rounded h-1 cursor-pointer">
+    </div>
+
+    <div class="bg-slate-950 p-2 rounded-xl border border-amber-900/50">
+      <div class="flex justify-between text-[11px] mb-1">
+        <span class="text-amber-300 font-semibold">ClearVü Angle</span>
+        <span id="val-clear-angle" class="text-white font-bold">45° (UHD)</span>
+      </div>
+      <input id="input-clear-angle" type="range" min="25" max="60" step="1" value="45" class="w-full accent-amber-400 bg-slate-800 rounded h-1 cursor-pointer">
+    </div>
+  </div>
+
+  <!-- DRAWER: Targets -->
+  <div id="drawer-targets" class="hidden absolute top-12 right-2 sm:right-16 z-50 w-72 sm:w-80 bg-slate-900 border border-slate-700 rounded-2xl p-3.5 drawer-panel font-hud text-xs space-y-2.5">
+    <div class="flex items-center justify-between border-b border-slate-800 pb-1.5">
+      <span class="font-bold text-cyan-400">🐟 Fish Targets & Spawner</span>
+      <button onclick="document.getElementById('drawer-targets').classList.add('hidden')" class="text-slate-400 hover:text-white font-bold px-1">&times;</button>
+    </div>
+    <div class="grid grid-cols-2 gap-1.5">
+      <button id="btn-spawn-center-bass" class="p-1.5 rounded-lg bg-slate-950 hover:bg-slate-800 border border-sky-800/60 text-sky-300 text-left">🎯 Keel Bass (2D)</button>
+      <button id="btn-spawn-port-bass" class="p-1.5 rounded-lg bg-slate-950 hover:bg-slate-800 border border-sky-800/60 text-sky-300 text-left">◄ 35' Port Bass</button>
+      <button id="btn-spawn-stbd-bass" class="p-1.5 rounded-lg bg-slate-950 hover:bg-slate-800 border border-sky-800/60 text-sky-300 text-left">40' Stbd Bass ►</button>
+      <button id="btn-spawn-bed" class="p-1.5 rounded-lg bg-slate-950 hover:bg-slate-800 border border-amber-800/60 text-amber-300 text-left">🪺 Bedded Spawner</button>
+      <button id="btn-spawn-boulder" class="p-1.5 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-700 text-slate-300 text-left">+ Boulder</button>
+      <button id="btn-spawn-timber" class="p-1.5 rounded-lg bg-slate-950 hover:bg-slate-800 border border-amber-800/60 text-amber-300 text-left">+ Timber</button>
+    </div>
+    <div class="pt-1 flex items-center justify-between border-t border-slate-800">
+      <button id="btn-auto-spawn" class="px-2.5 py-1 rounded-lg bg-slate-950 border border-cyan-800 text-cyan-300 font-bold">⚡ Auto-Spawn [OFF]</button>
+      <button onclick="window.dropFishingJig && window.dropFishingJig()" class="px-2.5 py-1 rounded-lg bg-emerald-600 text-slate-950 font-bold">🎣 Drop Jig</button>
+    </div>
+  </div>
+
+  <!-- DRAWER: Lakebed -->
+  <div id="drawer-lakebed" class="hidden absolute top-12 right-2 sm:right-28 z-50 w-72 sm:w-80 bg-slate-900 border border-slate-700 rounded-2xl p-3.5 drawer-panel font-hud text-xs space-y-2.5">
+    <div class="flex items-center justify-between border-b border-slate-800 pb-1.5">
+      <span class="font-bold text-amber-400">⛰ Lakebed Bathymetry Contours</span>
+      <button onclick="document.getElementById('drawer-lakebed').classList.add('hidden')" class="text-slate-400 hover:text-white font-bold px-1">&times;</button>
+    </div>
+    <div class="grid grid-cols-2 gap-1.5">
+      <button id="btm-flat" class="p-2 rounded-lg bg-cyan-700 text-white font-bold">Flat Basin</button>
+      <button id="btm-ledge" class="p-2 rounded-lg bg-slate-950 text-slate-300 hover:text-white border border-slate-800">Drop-Off Ledge</button>
+      <button id="btm-hump" class="p-2 rounded-lg bg-slate-950 text-slate-300 hover:text-white border border-slate-800">Offshore Hump</button>
+      <button id="btm-rolling" class="p-2 rounded-lg bg-slate-950 text-slate-300 hover:text-white border border-slate-800">Rolling Undulations</button>
+    </div>
+    <button id="btn-auto-vary" class="w-full py-1.5 rounded-lg bg-slate-950 text-amber-300 border border-amber-800/60 font-semibold">
+      〰️ Auto-Vary Depth Over Time
+    </button>
+  </div>
+
+  <!-- DRAWER: Tips Modal -->
+  <div id="drawer-tips" class="hidden absolute top-12 right-2 sm:right-10 z-50 w-80 sm:w-96 bg-slate-900 border border-amber-600/60 rounded-2xl p-3.5 drawer-panel font-hud text-xs space-y-2.5">
+    <div class="flex items-center justify-between border-b border-slate-800 pb-1.5">
+      <span class="font-bold text-amber-400">💡 Pro-Angler Sonar Reading Tips</span>
+      <button onclick="document.getElementById('drawer-tips').classList.add('hidden')" class="text-slate-400 hover:text-white font-bold px-1">&times;</button>
+    </div>
+    <div class="flex gap-1 border-b border-slate-800 pb-1">
+      <button id="tab-btn-live" class="px-2 py-0.5 rounded bg-sky-900 text-sky-300 font-bold text-[10px]">LiveScope</button>
+      <button id="tab-btn-side" class="px-2 py-0.5 rounded text-slate-400 hover:text-white text-[10px]">SideVü</button>
+      <button id="tab-btn-clear" class="px-2 py-0.5 rounded text-slate-400 hover:text-white text-[10px]">ClearVü</button>
+      <button id="tab-btn-trad" class="px-2 py-0.5 rounded text-slate-400 hover:text-white text-[10px]">2D CHIRP</button>
+    </div>
+    <div id="tip-content-box" class="text-slate-300 text-[11px] leading-relaxed p-2 bg-slate-950 rounded-xl border border-slate-800">
+      <p class="font-bold text-emerald-400 mb-1">Panoptix LiveScope™:</p>
+      <p>• Zero scroll delay. You are watching live video of the water column ahead.</p>
+      <p>• Live fish appear as swimming blips with glowing halos.</p>
+      <p>• Drop a jig and watch bass track and strike it in real time.</p>
+    </div>
+  </div>
+
+  <!-- MODAL: Welcome Introduction & Interactive Guide -->
+  <div id="modal-intro" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-sm">
+    <div class="bg-slate-900 border border-sky-500/60 max-w-lg w-full rounded-2xl p-4 sm:p-5 shadow-2xl relative font-hud text-xs space-y-3 max-h-[90vh] overflow-y-auto no-scrollbar">
+      
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+        <div class="flex items-center gap-2">
+          <div class="h-6 w-6 rounded-md bg-sky-500/20 border border-sky-400/40 flex items-center justify-center text-sky-400 text-xs">
+            📖
+          </div>
+          <span class="font-bold text-xs sm:text-sm text-sky-300 tracking-wide">
+            GARMIN GPSMAP® SIMULATOR GUIDE
+          </span>
+        </div>
+        <button id="btn-close-guide" class="text-slate-400 hover:text-white font-bold text-lg px-1.5 transition-colors">&times;</button>
+      </div>
+
+      <div class="space-y-2.5 text-slate-300 text-[11px] leading-relaxed font-sans">
+        <p class="text-slate-200 font-hud text-[11px]">
+          Welcome to the marine acoustics lab! Here is how to navigate and use the simulator:
+        </p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[10px] font-hud">
+          <div class="bg-slate-950 p-2.5 rounded-xl border border-sky-900/60 space-y-1">
+            <div class="font-bold text-sky-400 flex items-center gap-1">
+              <span>🐟 1. Add & Drag Targets</span>
+            </div>
+            <p class="text-slate-400 leading-normal font-sans">
+              Click anywhere in the lake to spawn fish, or drag items (Bass, Port/Stbd fish, Boulders, Timber, Jig) directly from the bottom dock into the water.
+            </p>
+          </div>
+
+          <div class="bg-slate-950 p-2.5 rounded-xl border border-amber-900/60 space-y-1">
+            <div class="font-bold text-amber-400 flex items-center gap-1">
+              <span>🎯 2. Cross-Screen Lock</span>
+            </div>
+            <p class="text-slate-400 leading-normal font-sans">
+              Click any fish, boulder, or timber badge on <em>any</em> view to illuminate a laser locator beacon and lock tactical tracking across all 4 sonars.
+            </p>
+          </div>
+
+          <div class="bg-slate-950 p-2.5 rounded-xl border border-purple-900/60 space-y-1">
+            <div class="font-bold text-purple-400 flex items-center gap-1">
+              <span>📡 3. 4 Sonar Technologies</span>
+            </div>
+            <p class="text-slate-400 leading-normal font-sans">
+              Compare <strong>LiveScope</strong> (real-time video), <strong>SideVü</strong> (shadows & keel pinch), <strong>ClearVü</strong> (razor silhouettes), and <strong>2D CHIRP</strong> (arches).
+            </p>
+          </div>
+
+          <div class="bg-slate-950 p-2.5 rounded-xl border border-emerald-900/60 space-y-1">
+            <div class="font-bold text-emerald-400 flex items-center gap-1">
+              <span>⚙️ 4. Helm & Drawers</span>
+            </div>
+            <p class="text-slate-400 leading-normal font-sans">
+              Adjust speed, depth, and gain at the bottom. Use the top drawer buttons (<strong>Angles</strong>, <strong>Targets</strong>, <strong>Lakebed</strong>) for acoustic geometry and bathymetry.
+            </p>
+          </div>
+        </div>
+
+        <div class="bg-sky-950/40 border border-sky-800/60 rounded-xl p-2 text-[10px] text-sky-200 font-hud space-y-0.5">
+          <div class="font-bold text-sky-300">💡 Pro-Tip:</div>
+          <div>Toggle <strong>🎯 Correlate</strong> to display letter badges ([A1], [B1], etc.) that connect objects in the lake directly to their acoustic shapes on each sounder.</div>
+        </div>
+      </div>
+
+      <div class="pt-2 border-t border-slate-800 flex items-center justify-between text-[10px]">
+        <label class="flex items-center gap-1.5 text-slate-400 cursor-pointer select-none">
+          <input type="checkbox" id="chk-intro-dont-show" class="accent-sky-500 rounded cursor-pointer">
+          <span>Don't show again on startup</span>
+        </label>
+        <button id="btn-start-simulator" class="px-3.5 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-hud font-bold text-[11px] transition-colors shadow">
+          Start Simulator ➔
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Trademark Attribution & Educational Disclaimer -->
+  <div id="drawer-credits" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-sm">
+    <div class="bg-slate-900 border border-slate-700 max-w-lg w-full rounded-2xl p-5 shadow-2xl relative font-hud text-xs space-y-3.5">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+        <span class="font-bold text-sm text-sky-400 flex items-center gap-2">
+          <span>⚖️ Trademark Attribution & Credits</span>
+        </span>
+        <button onclick="document.getElementById('drawer-credits').classList.add('hidden')" class="text-slate-400 hover:text-white font-bold text-lg px-1.5 transition-colors">&times;</button>
+      </div>
+
+      <div class="space-y-2.5 text-slate-300 text-[11px] leading-relaxed font-sans">
+        <p class="font-semibold text-slate-100 font-hud">
+          Garmin® Product & Technology Acknowledgement:
+        </p>
+        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800/90 font-hud text-[10px] space-y-1 text-slate-300">
+          <div>• <strong>GARMIN®</strong> and <strong>GPSMAP®</strong> are registered trademarks of Garmin Ltd. or its subsidiaries.</div>
+          <div>• <strong>Panoptix LiveScope™</strong>, <strong>SideVü™</strong>, and <strong>ClearVü™</strong> are trademarks of Garmin Ltd. or its subsidiaries.</div>
+        </div>
+
+        <p class="font-semibold text-slate-100 font-hud pt-1">
+          Disclaimer & Accuracy Notice:
+        </p>
+        <p class="text-slate-400 text-[10px] leading-normal">
+          This interactive simulator is an independent educational tool developed to demonstrate marine acoustic physics, beam geometry, bathymetry, and multi-display sonar interpretation. All visualizations and technical information are created with the best attempt to make them accurate, authentic, and representative of real-world marine electronics. Acoustic conditions in natural water bodies will vary with thermoclines, bottom composition, water clarity, and transducer mounting angles. This simulator is not produced, authorized, sponsored, or affiliated with Garmin Ltd.
+        </p>
+
+        <p class="font-semibold text-slate-100 font-hud pt-1">
+          Questions, Feedback & Inquiries:
+        </p>
+        <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800/90 flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[10px]">
+          <span class="text-slate-400">For questions, feedback, or corrections:</span>
+          <a href="mailto:mwoswald@gmail.com" class="text-sky-400 hover:text-sky-300 font-hud font-bold underline transition-colors">mwoswald@gmail.com</a>
+        </div>
+      </div>
+
+      <div class="pt-2 border-t border-slate-800 flex justify-end">
+        <button onclick="document.getElementById('drawer-credits').classList.add('hidden')" class="px-4 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-hud font-bold text-[11px] transition-colors">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./src/main.js?v=2"></script>
+</body>
+</html>
