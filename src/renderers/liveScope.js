@@ -275,25 +275,146 @@ export function renderLiveScopeMFD(canvas, ctx) {
     const isSelected = (state.selectedTargetId === st.id);
 
     if (st.type === 'boulder') {
-      const rockR = 8;
-      ctx.beginPath();
-      ctx.arc(px, py, rockR, 0, Math.PI * 2);
-      ctx.fillStyle = isSelected ? '#713f12' : '#064e3b';
-      ctx.fill();
-      ctx.strokeStyle = isSelected ? '#facc15' : '#34d399';
-      ctx.lineWidth = isSelected ? 2.5 : 1.5;
-      ctx.stroke();
+      const isSelected = (state.selectedTargetId === st.id);
+      const bWidthFt = st.width || 8.5;
+      const bHeightFt = st.height || 5.0;
 
-      hitBoxesLiveScope.push({
-        id: st.id,
-        x: px - rockR - 4,
-        y: py - rockR - 4,
-        w: rockR * 2 + 8,
-        h: rockR * 2 + 8
-      });
+      if (mode === 'perspective') {
+        // Perspective Mode (Top-down view): elliptical rock mound with acoustic shadow behind it
+        const pScale = (h - 28) / 60;
+        const rx = Math.max(7, (bWidthFt * 0.5) * pScale);
+        const ry = Math.max(5, (bWidthFt * 0.4) * pScale);
+        const shadowDist = Math.max(8, (bHeightFt * 1.5) * pScale);
 
-      if (state.showCorrelationOverlay || isSelected) {
-        drawLiveScopeBadge(canvas, ctx, px, py - 12, st.tag || 'E1', isSelected ? '★ BOULDER' : 'BOULDER DOME', isSelected ? '#facc15' : '#34d399', isSelected);
+        // Acoustic shadow cast away from boat origin (down-to-up ray)
+        ctx.save();
+        ctx.fillStyle = 'rgba(2, 6, 23, 0.95)';
+        ctx.beginPath();
+        ctx.ellipse(px, py - shadowDist * 0.5, rx * 1.15, shadowDist * 0.7, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Rocky boulder core
+        const rockGrad = ctx.createRadialGradient(px, py + ry * 0.3, 1, px, py, rx);
+        rockGrad.addColorStop(0, isSelected ? '#facc15' : '#34d399');
+        rockGrad.addColorStop(0.5, isSelected ? '#a16207' : '#059669');
+        rockGrad.addColorStop(1, isSelected ? '#713f12' : '#022c22');
+
+        ctx.fillStyle = rockGrad;
+        ctx.beginPath();
+        ctx.ellipse(px, py, rx, ry, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = isSelected ? '#fef08a' : '#6ee7b7';
+        ctx.lineWidth = isSelected ? 2.5 : 1.4;
+        ctx.stroke();
+        ctx.restore();
+
+        hitBoxesLiveScope.push({
+          id: st.id,
+          x: px - rx - 4,
+          y: py - ry - 4,
+          w: rx * 2 + 8,
+          h: ry * 2 + 8
+        });
+
+        if (state.showCorrelationOverlay || isSelected) {
+          drawLiveScopeBadge(canvas, ctx, px, py - ry - 8, st.tag || 'E1', isSelected ? '★ BOULDER' : 'BOULDER MOUND', isSelected ? '#facc15' : '#34d399', isSelected);
+        }
+      } else {
+        // Forward and Down Modes:
+        // Boulder is anchored directly on the lakebed contour beneath the target location
+        const scaleX = (w - 24) / maxRangeFt;
+        const scaleY = (h - 24) / maxDisplayDepth;
+        const scaleSpan = (w - 28) / 60;
+
+        const bedBaseY = (mode === 'down') 
+          ? (14 + bD * scaleY) 
+          : (14 + bD * scaleY);
+        const bBaseX = px;
+        const bBaseY = bedBaseY;
+
+        const halfWidthPx = Math.max(10, ((bWidthFt * 0.5) * (mode === 'down' ? scaleSpan : scaleX)));
+        const heightPx = Math.max(8, (bHeightFt * scaleY));
+        const topY = bBaseY - heightPx;
+
+        ctx.save();
+
+        // 1. Acoustic Sound Shadow behind the boulder (away from transducer)
+        const shadowWidthPx = halfWidthPx * 1.6;
+        const shadowGrad = ctx.createLinearGradient(bBaseX, bBaseY, bBaseX + shadowWidthPx, bBaseY);
+        shadowGrad.addColorStop(0, 'rgba(0, 0, 0, 0.95)');
+        shadowGrad.addColorStop(1, 'rgba(2, 6, 23, 0.40)');
+        ctx.fillStyle = shadowGrad;
+        ctx.beginPath();
+        ctx.moveTo(bBaseX + halfWidthPx * 0.5, bBaseY);
+        ctx.lineTo(bBaseX + shadowWidthPx, bBaseY + 4);
+        ctx.lineTo(bBaseX + halfWidthPx * 0.8, bBaseY + 14);
+        ctx.lineTo(bBaseX + halfWidthPx * 0.2, bBaseY + 8);
+        ctx.closePath();
+        ctx.fill();
+
+        // 2. High-Density Boulder Dome protruding up from lakebed
+        const domeGrad = ctx.createLinearGradient(bBaseX, topY, bBaseX, bBaseY);
+        if (isSelected) {
+          domeGrad.addColorStop(0, '#fef08a');
+          domeGrad.addColorStop(0.3, '#facc15');
+          domeGrad.addColorStop(0.8, '#a16207');
+          domeGrad.addColorStop(1, '#451a03');
+        } else {
+          // LiveScope high-density phased array return palette: bright yellow-green crest to deep jade rock body
+          domeGrad.addColorStop(0, '#a7f3d0');
+          domeGrad.addColorStop(0.25, '#34d399');
+          domeGrad.addColorStop(0.65, '#059669');
+          domeGrad.addColorStop(1, '#022c22');
+        }
+
+        ctx.beginPath();
+        ctx.moveTo(bBaseX - halfWidthPx, bBaseY);
+        // Realistic multi-faceted rocky contour curve
+        ctx.bezierCurveTo(
+          bBaseX - halfWidthPx * 0.85, topY + heightPx * 0.25,
+          bBaseX - halfWidthPx * 0.45, topY - heightPx * 0.05,
+          bBaseX - halfWidthPx * 0.10, topY
+        );
+        ctx.bezierCurveTo(
+          bBaseX + halfWidthPx * 0.25, topY + heightPx * 0.02,
+          bBaseX + halfWidthPx * 0.70, topY + heightPx * 0.35,
+          bBaseX + halfWidthPx, bBaseY
+        );
+        ctx.closePath();
+
+        ctx.fillStyle = domeGrad;
+        ctx.fill();
+
+        // 3. Glowing hard acoustic reflection crest along top edge
+        ctx.strokeStyle = isSelected ? '#fef08a' : '#6ee7b7';
+        ctx.lineWidth = isSelected ? 2.5 : 1.8;
+        ctx.beginPath();
+        ctx.moveTo(bBaseX - halfWidthPx, bBaseY);
+        ctx.bezierCurveTo(
+          bBaseX - halfWidthPx * 0.85, topY + heightPx * 0.25,
+          bBaseX - halfWidthPx * 0.45, topY - heightPx * 0.05,
+          bBaseX - halfWidthPx * 0.10, topY
+        );
+        ctx.bezierCurveTo(
+          bBaseX + halfWidthPx * 0.25, topY + heightPx * 0.02,
+          bBaseX + halfWidthPx * 0.70, topY + heightPx * 0.35,
+          bBaseX + halfWidthPx, bBaseY
+        );
+        ctx.stroke();
+
+        ctx.restore();
+
+        hitBoxesLiveScope.push({
+          id: st.id,
+          x: bBaseX - halfWidthPx - 4,
+          y: topY - 4,
+          w: halfWidthPx * 2 + 8,
+          h: heightPx + 8
+        });
+
+        if (state.showCorrelationOverlay || isSelected) {
+          drawLiveScopeBadge(canvas, ctx, bBaseX, topY - 14, st.tag || 'E1', isSelected ? '★ BOULDER' : 'BOULDER DOME', isSelected ? '#facc15' : '#34d399', isSelected);
+        }
       }
     } else if (st.type === 'tree') {
       const treeH = mode === 'perspective' ? 14 : 28;
