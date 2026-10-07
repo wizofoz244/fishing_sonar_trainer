@@ -321,6 +321,40 @@ class TestAcousticEngine(unittest.TestCase):
         self.assertEqual(lure_z - bow_z, 6.0)
 
 
+class TestUIStructure(unittest.TestCase):
+    """Unit tests validating HTML structural integrity and top banner elements."""
+
+    def test_top_disclaimer_banner(self) -> None:
+        """Verifies presence, accessibility attributes, and external links in the top disclaimer banner.
+
+        Returns:
+            None.
+
+        Raises:
+            AssertionError: If required banner markup or links are missing or malformed.
+        """
+        with open("index.html", "r", encoding="utf-8") as f:
+            html = f.read()
+
+        # Verify banner container
+        self.assertIn('id="banner-disclaimer"', html, "Top disclaimer banner must exist with id 'banner-disclaimer'")
+
+        # Verify notice text content
+        self.assertIn("demonstration simulator", html, "Notice must state that this is an independent demonstration simulator")
+        self.assertIn("No guarantee", html, "Notice must state that no guarantee is given")
+        self.assertIn("trademarks", html, "Notice must mention trademark ownership")
+
+        # Verify GitHub issue link and security attributes
+        github_issues_url = "https://github.com/wizofoz244/fishing_sonar_trainer/issues/new"
+        self.assertIn(github_issues_url, html, "Notice must include direct link to GitHub issues")
+        self.assertIn('target="_blank"', html, "GitHub issues link must open in a new tab")
+        self.assertIn('rel="noopener noreferrer"', html, "External link must contain rel='noopener noreferrer'")
+
+        # Verify dismiss button
+        self.assertIn("banner-disclaimer", html, "Dismiss button must target the disclaimer banner")
+
+
 if __name__ == "__main__":
     unittest.main()
+
 

@@ -18,4 +18,5 @@
 - [x] Implement LiveScope Forward, Down, and Perspective directional modes with beam azimuth rotation relative to boat travel (`src/state/simState.js`, `src/physics/acousticEngine.js`, `src/renderers/liveScope.js`, `src/renderers/lake3D.js`, `src/renderers/lake2D.js`, `src/ui/angleDrawers.js`, `src/ui/modals.js`, `index.html`, `tests/test_acoustics.py`) - [Issue #6](https://github.com/wizofoz244/fishing_sonar_trainer/issues/6)
 - [x] Verify functionality via automated checks (10/10 unit tests passing)
 - [x] Automatically commit and push to remote `origin/feature/livescope-modes-and-rotation`
+- [x] Add responsive top disclaimer notice banner with direct GitHub issue submission link (`index.html`, `tests/test_acoustics.py`) - [Issue #9](https://github.com/wizofoz244/fishing_sonar_trainer/issues/9)
 

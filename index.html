@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Garmin GPSMAP® Multi-Sonar & 3D Lake Simulator</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="./src/styles/main.css?v=5" />
+  <link rel="stylesheet" href="./src/styles/main.css?v=6" />
 </head>
 <body class="h-screen w-screen flex flex-col bg-slate-950 text-slate-100 overflow-hidden">
 
@@ -99,6 +99,27 @@
       </button>
     </div>
   </header>
+
+  <!-- TOP DISCLAIMER & NOTICE BANNER -->
+  <aside id="banner-disclaimer" class="bg-slate-900/95 border-b border-amber-800/40 px-3 py-1.5 flex items-center justify-between text-[11px] text-slate-300 flex-shrink-0 z-30">
+    <div class="flex items-center gap-2 flex-wrap leading-tight">
+      <span class="text-amber-400 font-bold font-hud flex items-center gap-1">
+        ⚠️ Notice:
+      </span>
+      <span>
+        This is an independent demonstration simulator. No guarantee is given to accurately represent the full capabilities or acoustic performance of actual devices. All trademarks are the property of their respective owners.
+      </span>
+      <span class="text-slate-400">
+        For issues or feature requests, please submit via 
+        <a href="https://github.com/wizofoz244/fishing_sonar_trainer/issues/new" target="_blank" rel="noopener noreferrer" class="text-sky-400 hover:text-sky-300 underline font-semibold inline-flex items-center gap-0.5 ml-0.5">
+          GitHub Issues ↗
+        </a>
+      </span>
+    </div>
+    <button onclick="document.getElementById('banner-disclaimer').remove()" class="text-slate-500 hover:text-slate-300 text-xs px-1.5 py-0.5 rounded hover:bg-slate-800 ml-2 flex-shrink-0" title="Dismiss notice">
+      ✕
+    </button>
+  </aside>
 
   <!-- MAIN HELM DISPLAY -->
   <main class="flex-1 w-full min-h-0 relative p-1.5 sm:p-2 overflow-hidden flex flex-col">
@@ -569,6 +590,6 @@
     </div>
   </div>
 
-  <script type="module" src="./src/main.js?v=6"></script>
+  <script type="module" src="./src/main.js?v=7"></script>
 </body>
 </html>
