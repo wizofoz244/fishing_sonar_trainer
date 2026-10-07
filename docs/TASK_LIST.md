@@ -9,9 +9,9 @@
 - [x] Implement UI components (`src/ui/telemetryHud.js`, `src/ui/helmDock.js`, `src/ui/angleDrawers.js`, `src/ui/targetTray.js`, `src/ui/modals.js`)
 - [x] Implement application entrypoint (`src/main.js`, `src/styles/main.css`, `index.html`)
 - [x] Author unit tests in `tests/test_acoustics.py` and verify 100% pass rate
-- [x] Fix drop jig animation and rendering in 2D lake view (`src/renderers/lake2D.js`, `src/main.js`, `index.html`)
-- [x] Enforce acoustic cone math for LiveScope MFD targets (jig and structures) (`src/renderers/liveScope.js`)
-- [x] Enforce physical acoustic beam bounds across all remaining MFDs (2D CHIRP, ClearVü, SideVü) and sample pings for lure (`src/renderers/chirp2D.js`, `src/renderers/clearVu.js`, `src/renderers/sideVu.js`, `src/renderers/sonarSuite.js`)
+- [x] Fix drop jig animation and rendering in 2D lake view (`src/renderers/lake2D.js`, `src/main.js`, `index.html`) - [Issue #2](https://github.com/wizofoz244/fishing_sonar_trainer/issues/2)
+- [x] Enforce acoustic cone math for LiveScope MFD targets (jig and structures) (`src/renderers/liveScope.js`) - [Issue #3](https://github.com/wizofoz244/fishing_sonar_trainer/issues/3)
+- [x] Enforce physical acoustic beam bounds across all remaining MFDs (2D CHIRP, ClearVü, SideVü) and sample pings for lure (`src/renderers/chirp2D.js`, `src/renderers/clearVu.js`, `src/renderers/sideVu.js`, `src/renderers/sonarSuite.js`) - [Issue #3](https://github.com/wizofoz244/fishing_sonar_trainer/issues/3)
 - [x] Author comprehensive acoustic reach unit tests in `tests/test_acoustics.py` (7/7 passing)
 - [x] Verify functionality via automated checks
-- [ ] Automatically commit and push to remote `origin/feature/modular-sonar-architecture`
+- [x] Automatically commit and push to remote `origin/feature/modular-sonar-architecture`
