@@ -455,7 +455,7 @@ function renderAcousticBeams3D(ctx, ox, oy, s, depth, lakeWidthHalf = 65) {
     ctx.stroke();
   }
 
-  // 4. LiveScope Phased Array
+  // 4. LiveScope Phased Array (20° Azimuth × Elevation Wedge with Lakebed Footprint)
   if (state.power['live']) {
     const txLive = project3D(0, txDepth, bowZ, ox, oy, s);
     const liveReach = 55;
@@ -465,33 +465,160 @@ function renderAcousticBeams3D(ctx, ox, oy, s, depth, lakeWidthHalf = 65) {
 
     const minAngle = Math.max(0.12, tiltRad - spreadRad / 2);
     const maxAngle = Math.min(Math.PI / 2 - 0.05, tiltRad + spreadRad / 2);
-    const numArcSteps = 16;
-    const portArc = [];
-    const stbdArc = [];
+    const numArcSteps = 24;
+
+    const portRays = [];
+    const stbdRays = [];
+    const bottomPtsPort = [];
+    const bottomPtsStbd = [];
 
     for (let i = 0; i <= numArcSteps; i++) {
       const angle = minAngle + (i / numArcSteps) * (maxAngle - minAngle);
+      // Raycast center to determine reach
       const ray = getLiveRayReach(angle, liveReach, bowZ, 0);
       const lateralWidth = Math.sin(halfAzimuthRad) * ray.r;
-      portArc.push(project3D(-lateralWidth, ray.depth, bowZ + ray.fwd, ox, oy, s));
-      stbdArc.push(project3D(lateralWidth, ray.depth, bowZ + ray.fwd, ox, oy, s));
+
+      // Calculate 3D points for port and starboard boundaries
+      const pPort = project3D(-lateralWidth, ray.depth, bowZ + ray.fwd, ox, oy, s);
+      const pStbd = project3D(lateralWidth, ray.depth, bowZ + ray.fwd, ox, oy, s);
+
+      portRays.push({ p: pPort, ray, lateral: -lateralWidth });
+      stbdRays.push({ p: pStbd, ray, lateral: lateralWidth });
+
+      if (ray.hitBottom) {
+        bottomPtsPort.push(pPort);
+        bottomPtsStbd.push(pStbd);
+      }
     }
 
+    // 4a. Shaded Lakebed Bottom Intersection Footprint
+    if (bottomPtsPort.length > 0) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(bottomPtsStbd[0].x, bottomPtsStbd[0].y);
+      for (let i = 1; i < bottomPtsStbd.length; i++) {
+        ctx.lineTo(bottomPtsStbd[i].x, bottomPtsStbd[i].y);
+      }
+      for (let i = bottomPtsPort.length - 1; i >= 0; i--) {
+        ctx.lineTo(bottomPtsPort[i].x, bottomPtsPort[i].y);
+      }
+      ctx.closePath();
+
+      // Glowing lakebed acoustic return fill
+      ctx.fillStyle = 'rgba(16, 185, 129, 0.40)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(52, 211, 153, 0.90)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // 4b. Port Lateral Acoustic Curtain Face
+    ctx.save();
     ctx.beginPath();
     ctx.moveTo(txLive.x, txLive.y);
-    for (let i = 0; i <= numArcSteps; i++) ctx.lineTo(stbdArc[i].x, stbdArc[i].y);
-    for (let i = numArcSteps; i >= 0; i--) ctx.lineTo(portArc[i].x, portArc[i].y);
+    for (let i = 0; i <= numArcSteps; i++) {
+      ctx.lineTo(portRays[i].p.x, portRays[i].p.y);
+    }
     ctx.closePath();
-
-    const liveGrad = ctx.createRadialGradient(txLive.x, txLive.y, 4, txLive.x, txLive.y + 120, liveReach * s * 1.8);
-    liveGrad.addColorStop(0, 'rgba(16, 185, 129, 0.55)');
-    liveGrad.addColorStop(0.6, 'rgba(16, 185, 129, 0.18)');
-    liveGrad.addColorStop(1, 'rgba(5, 150, 105, 0.03)');
-    ctx.fillStyle = liveGrad;
+    const portGrad = ctx.createLinearGradient(
+      txLive.x, txLive.y,
+      portRays[Math.floor(numArcSteps / 2)].p.x, portRays[Math.floor(numArcSteps / 2)].p.y
+    );
+    portGrad.addColorStop(0, 'rgba(16, 185, 129, 0.45)');
+    portGrad.addColorStop(0.6, 'rgba(16, 185, 129, 0.16)');
+    portGrad.addColorStop(1, 'rgba(5, 150, 105, 0.04)');
+    ctx.fillStyle = portGrad;
     ctx.fill();
-    ctx.strokeStyle = 'rgba(52, 211, 153, 0.7)';
+    ctx.strokeStyle = 'rgba(52, 211, 153, 0.50)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.restore();
+
+    // 4c. Starboard Lateral Acoustic Curtain Face
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(txLive.x, txLive.y);
+    for (let i = 0; i <= numArcSteps; i++) {
+      ctx.lineTo(stbdRays[i].p.x, stbdRays[i].p.y);
+    }
+    ctx.closePath();
+    const stbdGrad = ctx.createLinearGradient(
+      txLive.x, txLive.y,
+      stbdRays[Math.floor(numArcSteps / 2)].p.x, stbdRays[Math.floor(numArcSteps / 2)].p.y
+    );
+    stbdGrad.addColorStop(0, 'rgba(16, 185, 129, 0.45)');
+    stbdGrad.addColorStop(0.6, 'rgba(16, 185, 129, 0.16)');
+    stbdGrad.addColorStop(1, 'rgba(5, 150, 105, 0.04)');
+    ctx.fillStyle = stbdGrad;
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(52, 211, 153, 0.50)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.restore();
+
+    // 4d. Top Limit Face of the Wedge (from Transducer to shallowest beam boundary)
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(txLive.x, txLive.y);
+    ctx.lineTo(stbdRays[0].p.x, stbdRays[0].p.y);
+    ctx.lineTo(portRays[0].p.x, portRays[0].p.y);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(16, 185, 129, 0.22)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(52, 211, 153, 0.70)';
     ctx.lineWidth = 1.2;
     ctx.stroke();
+    ctx.restore();
+
+    // 4e. Bottom Limit Face of the Wedge (from Transducer to deepest beam boundary)
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(txLive.x, txLive.y);
+    ctx.lineTo(stbdRays[numArcSteps].p.x, stbdRays[numArcSteps].p.y);
+    ctx.lineTo(portRays[numArcSteps].p.x, portRays[numArcSteps].p.y);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(16, 185, 129, 0.22)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(52, 211, 153, 0.70)';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+    ctx.restore();
+
+    // 4f. Front Wavefront / Mid-Beam Volume Fill
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(portRays[0].p.x, portRays[0].p.y);
+    for (let i = 0; i <= numArcSteps; i++) {
+      ctx.lineTo(stbdRays[i].p.x, stbdRays[i].p.y);
+    }
+    for (let i = numArcSteps; i >= 0; i--) {
+      ctx.lineTo(portRays[i].p.x, portRays[i].p.y);
+    }
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(16, 185, 129, 0.12)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(52, 211, 153, 0.65)';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+    ctx.restore();
+
+    // 4g. Key Acoustic Ridge / Guideline Lines from Transducer
+    ctx.save();
+    ctx.strokeStyle = 'rgba(52, 211, 153, 0.85)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    // 4 corner rails of the pyramid/wedge
+    ctx.moveTo(txLive.x, txLive.y);
+    ctx.lineTo(portRays[0].p.x, portRays[0].p.y);
+    ctx.moveTo(txLive.x, txLive.y);
+    ctx.lineTo(stbdRays[0].p.x, stbdRays[0].p.y);
+    ctx.moveTo(txLive.x, txLive.y);
+    ctx.lineTo(portRays[numArcSteps].p.x, portRays[numArcSteps].p.y);
+    ctx.moveTo(txLive.x, txLive.y);
+    ctx.lineTo(stbdRays[numArcSteps].p.x, stbdRays[numArcSteps].p.y);
+    ctx.stroke();
+    ctx.restore();
   }
 }
 
